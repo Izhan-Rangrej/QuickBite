@@ -213,10 +213,17 @@ def remove_coupon(request):
 # ---------- wishlist ----------
 
 def wishlist_ids_for(request):
-    """Set of dish ids the current user has wishlisted (empty for guests)."""
-    if not request.user.is_authenticated:
+    """Set of dish ids the current user has wishlisted (empty for guests).
+
+    `getattr` rather than `request.user` because this runs from a template context
+    processor, which also executes while rendering error pages — those requests can
+    die before AuthenticationMiddleware ran (a rejected Host header, a bad cookie),
+    so the attribute may not exist at all. Guarding it keeps a 400 from becoming a 500.
+    """
+    user = getattr(request, 'user', None)
+    if user is None or not user.is_authenticated:
         return set()
-    return set(request.user.wishlist_items.values_list('dish_id', flat=True))
+    return set(user.wishlist_items.values_list('dish_id', flat=True))
 
 
 def toggle_wishlist(user, dish):

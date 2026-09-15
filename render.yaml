@@ -1,36 +1,91 @@
 # Render Blueprint — https://render.com/docs/blueprint-spec
-# Push the repo to GitHub, then "New +" → "Blueprint" in Render and pick it.
-databases:
-  - name: quickbite-db
-    databaseName: quickbite
-    user: quickbite
-    plan: free
-    postgresMajorVersion: "16"
+#
+# ── Topology ───────────────────────────────────────────────────────────────────
+#   Render   → the QuickBite app itself. It's a server-rendered Django monolith,
+#              so the "frontend" (templates, CSS/JS via WhiteNoise) and the
+#              "backend" (views, admin, cart, orders) are this ONE web service.
+#   Neon     → PostgreSQL, the "backend" in the data sense. Its connection string
+#              is pasted into DATABASE_URL once, in the dashboard (sync: false),
+#              so re-syncing this file never overwrites or leaks it.
+#
+# There is deliberately no `databases:` block: the database lives in Neon, so
+# Render must not provision (or later delete) its own Postgres for this app.
+#
+# ── First deploy ───────────────────────────────────────────────────────────────
+# 1. Create the Neon project (see DEPLOYMENT.md §2) and copy the *direct* string.
+# 2. Render dashboard → New + → Blueprint → this repo.
+# 3. After the first build, set the two `sync: false` vars (ALLOWED_HOSTS,
+#    SITE_URL) to your real onrender.com host, then Save.
+# 4. Shell tab → `python manage.py createsuperuser` (data is seeded by the build).
+#
+# ── Upgrading off the free tier ───────────────────────────────────────────────
+# Free instances sleep after ~15 min and cannot attach a persistent disk. To keep
+# uploads across redeploys, switch `plan` to `0.5c-512mb` (Starter) and uncomment
+# the `disk` + MEDIA_ROOT lines below.
 
 services:
   - type: web
     name: quickbite
     runtime: python
     plan: free
-    buildCommand: ./build.sh
-    startCommand: gunicorn quickbite.wsgi:application --bind 0.0.0.0:$PORT --workers 2
-    healthCheckPath: /
+    region: singapore            # nearest Render region to India — match it with
+                                 # Neon's AWS region ap-southeast-1 (Singapore)
+    buildCommand: bash build.sh     # 'bash …' so a lost exec bit can never break the build
+    startCommand: gunicorn quickbite.wsgi:application --bind 0.0.0.0:$PORT --workers 2 --timeout 60 --access-logfile - --error-logfile -
+    healthCheckPath: /healthz    # core.ops.healthz — 200 while the process is up
+    autoDeployTrigger: commit    # redeploy on every push to the linked branch
+
     envVars:
+      # ---- never True in public ----
       - key: QUICKBITE_DEBUG
         value: "False"
+
+      # Render generates and stores this on first sync; it is NOT rotated later.
       - key: SECRET_KEY
         generateValue: true
-      - key: ALLOWED_HOSTS
-        sync: false          # set to <your-app>.onrender.com after first deploy
-      - key: SITE_URL
-        sync: false          # https://<your-app>.onrender.com
+
+      # ---- Neon (paste the full string, e.g.
+      # postgresql://neondb_owner:xxxx@ep-cool-name-123456.ap-southeast-1.aws.neon.tech/neondb?sslmode=require
+      # sync: false → Render keeps your dashboard value across Blueprint syncs.
       - key: DATABASE_URL
-        fromDatabase:
-          name: quickbite-db
-          property: connectionString
+        sync: false
+
+      # Set both after the first deploy, e.g.
+      #   ALLOWED_HOSTS = quickbite.onrender.com
+      #   SITE_URL      = https://quickbite.onrender.com
+      - key: ALLOWED_HOSTS
+        sync: false
+      - key: SITE_URL
+        sync: false
+
+      # TLS is terminated at Render's proxy — trust it, and redirect http→https.
       - key: USE_X_FORWARDED_HOST
         value: "True"
       - key: SECURE_SSL_REDIRECT
         value: "True"
+
+      # First deploy only: `build.sh` seeds sample data so the site isn't empty.
+      # Set to False once this is a real store with real rows.
+      - key: QUICKBITE_SEED_ON_BUILD
+        value: "True"
+
+      - key: LOG_LEVEL
+        value: "INFO"
       - key: PYTHON_VERSION
         value: "3.13.1"
+
+      # Optional — set in the dashboard when you have them:
+      #   GA_MEASUREMENT_ID, SEARCH_CONSOLE_TOKEN, EMAIL_HOST/EMAIL_PORT/
+      #   EMAIL_HOST_USER/EMAIL_HOST_PASSWORD, DEFAULT_FROM_EMAIL, CONTACT_EMAIL,
+      #   DB_CONN_MAX_AGE (0 if you use Neon's -pooler string),
+      #   MEDIA_ROOT (point at a disk mount, see below)
+
+    # ── Upload persistence (paid plans only — free instances can't mount disks) ──
+    # Uncomment both blocks, then restart; new uploads then survive redeploys.
+    # disk:
+    #   name: quickbite-media
+    #   mountPath: /opt/render/project/src/media
+    #   sizeGB: 1
+    # and add to envVars:
+    #   - key: MEDIA_ROOT
+    #     value: /opt/render/project/src/media

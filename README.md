@@ -56,12 +56,12 @@ admin dashboard, owner panel.*
 | Layer | Tech |
 |---|---|
 | Backend | Python 3.13, Django 6.1 |
-| Database | SQLite (dev) / PostgreSQL 16 (prod, `DATABASE_URL`) |
-| Frontend | Django templates, vanilla JS, AOS, Chart.js, Boxicons, Poppins |
+| Database | SQLite (dev) / **Neon** serverless PostgreSQL (prod, via `DATABASE_URL`) |
+| Frontend | Django templates, vanilla JS, AOS, Chart.js, Boxicons, Poppins (served by the same Render service — server-rendered monolith, no separate SPA host) |
 | Email | Django 6.1 `MAILERS` API — console (dev) / SMTP (Brevo, SendGrid…) |
 | Static | WhiteNoise (fingerprint + compress), rcssmin/rjsmin |
 | Images | Pillow (`optimize_images` management command) |
-| Hosting | Render (free web + free Postgres) — see [DEPLOYMENT.md](DEPLOYMENT.md) |
+| Hosting | **Render** free web service (app + static) · **Neon** free Postgres (data) — see [DEPLOYMENT.md](DEPLOYMENT.md) |
 
 ## 📁 Project layout
 
@@ -103,14 +103,14 @@ your superuser for `/admin/` and `/dashboard/`. Coupons: **FIRST50**, **FREEDEL*
 ### Tests
 
 ```bash
-python manage.py test        # 74 tests — models, views, forms, SEO, security
+python manage.py test        # 110 tests — models, views, forms, SEO, security, deploy
 ```
 
 ## 🌍 Deploy for free
 
-Full step-by-step (Render: Blueprint, Postgres, env vars, seed, SMTP, domain,
-GA4, Search Console, backups, monitoring; PythonAnywhere & Railway appendices):
-**[DEPLOYMENT.md](DEPLOYMENT.md)**
+Full step-by-step (Neon project → Render Blueprint → env vars → seed → SMTP →
+domain → GA4/Search Console → backups → monitoring; PythonAnywhere & Railway
+appendices): **[DEPLOYMENT.md](DEPLOYMENT.md)**
 
 Minimum env vars on the host: `QUICKBITE_DEBUG=False`, `SECRET_KEY`,
 `ALLOWED_HOSTS`, `SITE_URL`, `DATABASE_URL` (the rest documented in `.env.example`).

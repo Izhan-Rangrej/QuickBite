@@ -9,6 +9,9 @@ variables on Render / PythonAnywhere / Railway). See .env.example.
 from pathlib import Path
 
 from decouple import Csv, config
+from django.core.exceptions import ImproperlyConfigured
+
+from quickbite.db import DatabaseURLError, database_config_from_url
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -103,32 +106,38 @@ TEMPLATES = [
 WSGI_APPLICATION = 'quickbite.wsgi.application'
 
 # ---------- database ----------
-# DATABASE_URL=postgres://user:pass@host:5432/dbname  → PostgreSQL (production)
-# anything else (or unset)                            → local SQLite (development)
+# Neon (or any PostgreSQL) via DATABASE_URL; unset → local SQLite.
+#
+#   DATABASE_URL=postgresql://user:pass@ep-x.us-east-2.aws.neon.tech/neondb?sslmode=require
+#
+# Parsing lives in quickbite/db.py (query strings, percent-encoded passwords,
+# pooler endpoints) so it can be unit-tested in isolation.
 DATABASE_URL = config('DATABASE_URL', default='')
-if DATABASE_URL:
-    import re
-    m = re.match(r'postgres(?:ql)?://([^:]+):([^@]+)@([^:/]+):?(\d+)?/(.+)', DATABASE_URL)
-    if not m:
-        raise RuntimeError('DATABASE_URL must look like postgres://user:pass@host:port/db')
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.postgresql',
-            'NAME': m.group(5),
-            'USER': m.group(1),
-            'PASSWORD': m.group(2),
-            'HOST': m.group(3),
-            'PORT': m.group(4) or '5432',
-            'CONN_MAX_AGE': 60,  # persistent connections
-        }
-    }
-else:
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.sqlite3',
-            'NAME': BASE_DIR / 'db.sqlite3',
-        }
-    }
+
+
+def _flag(name, default):
+    """int/bool from the environment, tolerating an empty value (hosts leave blanks)."""
+    raw = str(config(name, default='')).strip()
+    if not raw:
+        return default
+    if isinstance(default, bool):
+        return raw.lower() in ('1', 'true', 'yes', 'on')
+    try:
+        return int(raw)
+    except ValueError:
+        return default
+
+
+DATABASES = {}
+try:
+    DATABASES['default'] = database_config_from_url(
+        DATABASE_URL,
+        sqlite_name=BASE_DIR / 'db.sqlite3',
+        conn_max_age=_flag('DB_CONN_MAX_AGE', 60),
+        conn_health_checks=_flag('DB_CONN_HEALTH_CHECKS', True),
+    )
+except DatabaseURLError as exc:
+    raise ImproperlyConfigured(f'DATABASE_URL is unusable: {exc}') from exc
 
 # ---------- password validation ----------
 AUTH_PASSWORD_VALIDATORS = [
@@ -151,7 +160,9 @@ STATICFILES_DIRS = [BASE_DIR / 'static']
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 MEDIA_URL = 'media/'
-MEDIA_ROOT = BASE_DIR / 'media'
+# Overridable so uploads can live on a mounted volume (Render persistent disk,
+# e.g. MEDIA_ROOT=/opt/render/project/src/media) without a code change.
+MEDIA_ROOT = Path(config('MEDIA_ROOT', default=str(BASE_DIR / 'media')))
 
 # Production: WhiteNoise fingerprints + compresses (gzip/brotli) every static file.
 if DEBUG:
@@ -210,6 +221,37 @@ SEARCH_CONSOLE_TOKEN = config('SEARCH_CONSOLE_TOKEN', default='')  # meta-tag ve
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # ---------- security (production) ----------
+# Requests reach Render's proxy over HTTPS and the app over HTTP, so build the CSRF
+# origin list from SITE_URL too — otherwise POST /checkout can 403 the moment you
+# switch on a custom domain or a www/non-www redirect.
+def _csrf_origin(value):
+    """Normalise to the `scheme://host` form Django requires (no path, no trailing /)."""
+    value = (value or '').strip().rstrip('/')
+    if not value:
+        return ''
+    if '://' not in value:
+        value = 'https://' + value                       # a bare host means https in prod
+    scheme, sep, rest = value.partition('://')
+    if scheme not in ('http', 'https'):
+        return ''
+    return f'{scheme}{sep}{rest.split("/")[0]}'
+
+
+_csrf_origins = [o for o in
+                 (_csrf_origin(x) for x in config('CSRF_TRUSTED_ORIGINS', default='', cast=Csv()))
+                 if o]
+if SITE_URL and '://localhost' not in SITE_URL:
+    _site = _csrf_origin(SITE_URL)
+    if _site and _site not in _csrf_origins:
+        _csrf_origins.append(_site)
+CSRF_TRUSTED_ORIGINS = _csrf_origins
+
+# Render probes /healthz over plain HTTP and expects a 2xx — exempt it from the
+# HTTPS redirect so the check exercises the app instead of just the redirector.
+# Defined unconditionally (not only under `if not DEBUG`) so dev, tests and prod
+# resolve the same setting.
+SECURE_REDIRECT_EXEMPT = [r'^healthz/?$']
+
 if not DEBUG:
     SECURE_SSL_REDIRECT = config('SECURE_SSL_REDIRECT', default=True, cast=bool)
     SESSION_COOKIE_SECURE = True

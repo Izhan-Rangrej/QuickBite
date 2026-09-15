@@ -6,9 +6,15 @@ LOCATION_SESSION_KEYS = ('delivery_lat', 'delivery_lon', 'delivery_label')
 
 
 def delivery_location(request):
-    lat = request.session.get('delivery_lat')
-    lon = request.session.get('delivery_lon')
-    label = request.session.get('delivery_label')
+    # `session` is missing on requests rejected before SessionMiddleware (error
+    # pages run context processors too), so read it defensively.
+    session = getattr(request, 'session', None)
+    if session is None:
+        return {'delivery_lat': None, 'delivery_lon': None,
+                'delivery_label': None, 'has_location': False}
+    lat = session.get('delivery_lat')
+    lon = session.get('delivery_lon')
+    label = session.get('delivery_label')
     return {
         'delivery_lat': lat,
         'delivery_lon': lon,
