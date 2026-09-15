@@ -1,208 +1,287 @@
-# 🚀 Deploying QuickBite — step by step
+# 🚀 Publishing QuickBite — Render (app) + Neon (database)
 
-This guide takes QuickBite from your laptop to a live HTTPS URL **for free**, using
-**Render** (Option B). A condensed PythonAnywhere version is at the bottom, and
-post-deployment (domain, analytics, backups, monitoring) applies to all options.
+This repo is a **server-rendered Django monolith**: the HTML/CSS/JS *and* the views,
+cart, orders and admin all live in one Python process. So the split is:
 
----
+| Piece | Where it runs | What it is |
+|---|---|---|
+| "Frontend" (HTML, CSS, JS, images) | **Render** web service | Django templates + WhiteNoise-served static files |
+| "Backend" (business logic) | **the same Render service** | gunicorn → `quickbite.wsgi` |
+| Data (users, dishes, orders) | **Neon** | serverless PostgreSQL over TLS (`DATABASE_URL`) |
 
-## Why Render?
+There is nothing to host separately for the frontend: if you deploy only a static
+host you get a shell with no cart, no orders and no admin. One Render service covers
+both, which is also why `render.yaml` defines exactly one service.
 
-| | Render | PythonAnywhere | Railway |
-|---|---|---|---|
-| Free web app | ✅ (spins down after inactivity) | ✅ (always on, `yourname.pythonanywhere.com`) | ⚠️ trial credits only |
-| Free PostgreSQL | ✅ | ❌ (MySQL only on free) | ❌ |
-| Auto-deploy from GitHub | ✅ | ❌ manual | ✅ |
-| Blueprint (infra as code) | ✅ `render.yaml` included | ❌ | ⚠️ |
-
-Render + free Postgres + `render.yaml` (already in this repo) is the smoothest path.
-The one trade-off: the free tier sleeps after ~15 minutes without traffic, so the
-first request after a nap takes ~30 s. Fine for a portfolio; upgrade later if needed.
+Everything below is free-tier capable. Total hands-on time: ~15 minutes.
 
 ---
 
-## Part 1 — Prepare the repo (5 minutes)
+## Part 1 — Create the Neon database (5 min)
 
-1. **Generate a real secret key** (never ship the dev one):
+1. [console.neon.tech](https://console.neon.tech) → **New project**.
+2. Name it `quickbite`. **Region: AWS Singapore (`ap-southeast-1`)** — that matches
+   `region: singapore` in `render.yaml`, and keeps you ~30 ms from most Indian users.
+   *Set this once; a Neon project's region cannot be changed later.*
+3. It creates database `neondb` owned by role `neondb_owner`. Fine — keep the names.
+4. **Connect** dialog → leave *Connection pooling* **off** → **copy the string**:
 
-   ```bash
-   python -c "from django.core.management.utils import get_random_secret_key as k; print(k())"
+   ```
+   postgresql://neondb_owner:xxxx@ep-cool-name-123456.ap-southeast-1.aws.neon.tech/neondb?sslmode=require
    ```
 
-2. **Confirm the production files exist** (they're all in this repo):
+   Keep `?sslmode=require` — Neon rejects non-TLS connections outright.
 
-   ```
-   requirements.txt   # pinned dependencies
-   render.yaml        # Render Blueprint: web service + free Postgres
-   build.sh           # pip install → minify_static → collectstatic → migrate
-   .env.example       # documentation of every env var
-   .gitignore         # keeps .env, db.sqlite3, media/, staticfiles/ out of git
-   ```
+**Direct vs pooled — which one?** Render runs 2 gunicorn workers, i.e. ~4 database
+connections, so use the **direct** string. Neon's pooled endpoint (`-pooler` host) is
+PgBouncer in *transaction* mode: it adds limits you don't need here and breaks
+session-level features. `quickbite/db.py` auto-disables server-side cursors and
+prepared statements if you do paste a `-pooler` URL, so both work — but direct is
+the default recommendation.
 
-3. **Smoke-test production mode locally** (catches 90% of deploy surprises):
+**Do not** enable Neon's *Network restrictions* (IP allowlist): Render's free
+instances have dynamic egress IPs and you would lock yourself out.
 
-   ```bash
-   python manage.py minify_static
-   python manage.py collectstatic --noinput
-   QUICKBITE_DEBUG=False ALLOWED_HOSTS=localhost,127.0.0.1 \
-     python manage.py runserver 8001
-   # then visit http://localhost:8001/ — static files are served by WhiteNoise,
-   # custom 404 pages are live, DEBUG banners are gone.
-   ```
-
-4. **Push to GitHub:**
-
-   ```bash
-   git init && git add . && git commit -m "QuickBite — ready to deploy"
-   git branch -M main
-   git remote add origin https://github.com/<you>/quickbite.git
-   git push -u origin main
-   ```
-
-> ⚠️ **Media files note.** Uploaded dish/restaurant photos live in `media/`
-> (git-ignored). On Render's free tier there is no persistent disk by default, so
-> either (a) commit the seed images under `static/images/seed/` (already in the
-> repo) and re-run `python manage.py seed_data` via the shell after deploy, or
-> (b) add a Render **Disk** mount at `/opt/render/project/src/media` (Blueprint:
-> `disk: { name: media, mountPath: .../media, sizeGB: 1 }`) for real uploads.
+Free-tier behaviour worth knowing: Neon's compute **scales to zero after ~5 idle
+minutes**, so the first query after a quiet spell takes ~0.5–2 s. `CONN_MAX_AGE=60`
++ `CONN_HEALTH_CHECKS` (both already on) make a stale connection reconnect instead of
+throwing a 500.
 
 ---
 
-## Part 2 — Deploy on Render (10 minutes)
+## Part 2 — Deploy the app on Render (10 min)
 
-1. **Create the account:** [render.com](https://render.com) → sign in with GitHub.
+### 2.1 Push the repo
 
-2. **Create a Blueprint:** Dashboard → **New +** → **Blueprint** → pick your
-   `quickbite` repo. Render reads `render.yaml` and creates:
-   - `quickbite-db` — a free PostgreSQL 16 database
-   - `quickbite` — the web service, with `DATABASE_URL` wired automatically
+```bash
+git add . && git commit -m "QuickBite → Render + Neon"
+git push origin main
+```
 
-3. **Watch the build.** Render runs `build.sh`:
-   `pip install → minify_static → collectstatic → migrate`, then starts
-   `gunicorn quickbite.wsgi:application --bind 0.0.0.0:$PORT`.
+### 2.2 Create the Blueprint
 
-4. **Set the two `sync: false` env vars** (service → Environment):
-   - `ALLOWED_HOSTS` = `quickbite.onrender.com` (your actual URL)
-   - `SITE_URL` = `https://quickbite.onrender.com`
+Render dashboard → **New +** → **Blueprint** → pick this repo → Render reads
+`render.yaml` and shows a diff: one web service, `plan: free`, `region: singapore`,
+**no** `databases:` block (the database is external — Render must not provision or
+later garbage-collect its own Postgres for you).
 
-   Hit **Save** → the service redeploys.
+**Deploy Blueprint**, then open the service → **Environment** → set the three
+`sync: false` variables (they are yours to paste, so the Blueprint never overwrites
+them):
 
-5. **Seed + superuser.** Service → **Shell** tab:
+| Key | Value |
+|---|---|
+| `DATABASE_URL` | the whole Neon string from Part 1 |
+| `ALLOWED_HOSTS` | `quickbite.onrender.com` → after deploy: `<your-prefix>.onrender.com` |
+| `SITE_URL` | `https://<your-prefix>.onrender.com` (no trailing slash) |
 
-   ```bash
-   python manage.py seed_data                     # categories, restaurants, dishes, coupons, reviews
-   python manage.py createsuperuser               # admin login
-   ```
+> `SECRET_KEY` was generated by the Blueprint (`generateValue: true`) — Render keeps
+> that value across syncs, so sessions and tokens survive redeploys.
 
-6. **Visit `https://quickbite.onrender.com`** 🎉
-   Check: homepage → add to cart → login → checkout → `/dashboard/` →
-   `/sitemap.xml` → a bad URL (custom 404).
+Save → Render redeploys. **Build log to expect** (from `build.sh`):
+`check → minify_static → collectstatic → migrate → seed_data → restore_seed_media`.
+
+Migrations run *in the build*, not in a `preDeployCommand`, because that field is
+paid-only and its filesystem side-effects are discarded — the build directory is what
+actually gets deployed.
+
+### 2.3 Admin login + verify
+
+Service → **Shell**:
+
+```bash
+python manage.py createsuperuser
+python manage.py restore_seed_media --report    # expect: missing: 0
+```
+
+Then check, in this order:
+
+- `/` → categories, restaurants, dish photos **rendering** (that last part is the
+  one people forget — see §4.2)
+- add to cart → coupon `FIRST50` → `/checkout/` → order confirmation
+- `/healthz` → `{"status":"ok","database":"ok"}` (Render uses this path to decide
+  restarts; it deliberately answers 200 while the process is up)
+- `/admin/`, `/dashboard/`, `/sitemap.xml`, one bad URL (themed 404)
 
 ---
 
-## Part 3 — Real email (optional but recommended)
+## Part 3 — Moving existing local data into Neon
 
-The free tier has no SMTP. Use [Brevo](https://brevo.com) (300 emails/day free):
+If your laptop's `db.sqlite3` already has real content you want published:
 
-1. Brevo → SMTP & API → create an SMTP key.
-2. On Render, add env vars:
-   `EMAIL_HOST=smtp-relay.brevo.com`, `EMAIL_PORT=587`,
-   `EMAIL_HOST_USER=yourlogin`, `EMAIL_HOST_PASSWORD=<smtp-key>`,
-   `DEFAULT_FROM_EMAIL=QuickBite <you@yourdomain.com>`, `CONTACT_EMAIL=you@yourdomain.com`.
-3. Order confirmations, status updates and contact-form messages now send for real.
+```bash
+python manage.py dumpdata --natural-foreign --natural-primary \
+  -e contenttypes -e auth.permission -e admin.logentry \
+  --indent 2 -o data.json
+python manage.py loaddata --database=default data.json     # with DATABASE_URL set to Neon
+rm data.json                                                # never commit this file
+```
+
+Then copy the uploads so image paths resolve: `rsync -a media/ <Render Shell>:media/`
+(SSH: `git config` … or use the Shell tab's *upload* affordance / SCP — see §4.2 for
+why media needs a disk).
+
+Watch out: SQLite is lenient about things Postgres is not (oversized strings,
+duplicate rows hitting unique constraints, `Decimal` rounding). If `loaddata` errors,
+fix the rows in SQLite and re-dump — don't hand-edit SQL.
 
 ---
 
-## Part 4 — Post-deployment checklist
+## Part 4 — Things that bite on this stack
+
+### 4.1 `DATABASE_URL` and its query string
+
+Neon's string ends in `?sslmode=require`. A naive `postgres://(.*?)/(.*)` split makes
+the *database name* `neondb?sslmode=require` and Postgres answers
+`database "neondb?sslmode=require" does not exist` — the classic "works in the
+dashboard, fails in Django" trap. `quickbite/db.py` parses the URL properly
+(query params → driver options, percent-decoded password, `-pooler` detection) and is
+covered by unit tests in `core/tests_deploy.py`.
+
+If you ever see `ImproperlyConfigured: DATABASE_URL is unusable: …`, the message
+tells you exactly which part of the string is wrong.
+
+### 4.2 Uploaded images are ephemeral on the free tier
+
+`MEDIA_ROOT` (`media/`) is git-ignored, and Render resets everything outside a mounted
+disk on each deploy — so rows would point at vanished files. Two mitigations are
+already wired in:
+
+- **`/media/` is served in production.** `core/ops.serve_media` handles it (Django's
+  dev-only `static()` helper does not exist when `DEBUG=False`, and WhiteNoise covers
+  `staticfiles/` only). Images only, traversal-proof, `Cache-Control: public, max-age=86400`.
+- **`python manage.py restore_seed_media`** (run by `build.sh`) re-copies the bundled
+  photos in `static/images/seed/` for every file the database references, so a
+  freshly-deployed demo has its pictures.
+
+**Real uploads** (a restaurant owner adding a dish photo) still vanish on redeploy,
+because free instances cannot mount a disk. When that matters:
+
+1. Upgrade `plan: free` → `plan: 0.5c-512mb` (Starter) in `render.yaml`.
+2. Uncomment the `disk:` block and the `MEDIA_ROOT` env var in the same file
+   (mount path `/opt/render/project/src/media`).
+3. Redeploy; then copy current files onto the disk once from the Shell.
+
+Or skip disks entirely and put media in S3/R2 (`django-storages`); that also survives
+region moves and is the right answer once traffic is real.
+
+### 4.3 Free tier sleeps
+
+Render's free instance spins down after ~15 min without traffic: the next visitor waits
+~10–30 s (plus Neon waking up). A free [UptimeRobot](https://uptimerobot.com) check on
+`https://<app>.onrender.com/` every 5 minutes keeps it warm *and* alerts you. Move
+`plan` to `0.5c-512mb` when real customers arrive.
+
+### 4.4 Quick troubleshooting
+
+| Symptom | Cause | Fix |
+|---|---|---|
+| `DisallowedHost` / themed 400 at a new URL | host not in `ALLOWED_HOSTS` | add it (comma-separated list, no scheme) |
+| `403 CSRF verification failed` on checkout | `SITE_URL`/`CSRF_TRUSTED_ORIGINS` mismatch | set `SITE_URL` to the exact `https://host` you type |
+| `database "…?sslmode=require" does not exist` | URL parsed naively | pull latest `main` (§4.1) |
+| `FATAL: connection requires a valid "sslmode"` | `sslmode` stripped from the string | paste the full Neon string |
+| Build: `Permission denied: ./build.sh` | exec bit lost in a clone | already avoided — `buildCommand: bash build.sh` |
+| Build: `ModuleNotFoundError: psycopg` | stale build cache | **Clear build cache & deploy** |
+| `too many connections` on Neon | many workers/instances | use the `-pooler` string and set `DB_CONN_MAX_AGE=0` |
+| Dish photos missing after redeploy | ephemeral disk | `restore_seed_media` (auto in build) or a disk (§4.2) |
+| Every page 301-loops | `SECURE_SSL_REDIRECT` behind a proxy that doesn't set `X-Forwarded-Proto` | keep `USE_X_FORWARDED_HOST=True` (Render does send it) |
+
+---
+
+## Part 5 — Real email (recommended)
+
+Render's free tier has no SMTP, so order confirmations only print to the log.
+[Brevo](https://brevo.com) gives 300 emails/day free:
+
+1. Brevo → **SMTP & API** → create an SMTP key.
+2. Render → Environment → add:
+   `EMAIL_HOST=smtp-relay.brevo.com`, `EMAIL_PORT=587`, `EMAIL_HOST_USER=<login>`,
+   `EMAIL_HOST_PASSWORD=<smtp-key>`, `DEFAULT_FROM_EMAIL=QuickBite <you@yourdomain>`,
+   `CONTACT_EMAIL=you@yourdomain.com` → Save (redeploys).
+
+Domain: verify it in Brevo, or Gmail/Outlook will treat your mail as spam.
+
+---
+
+## Part 6 — After it's live
 
 ### Custom domain
-Render → your service → **Settings → Custom Domains** → add `quickbite.com` →
-at your registrar create `CNAME quickbite → quickbite.onrender.com` → wait for
-the green check (Render issues the TLS cert automatically). Then update
-`ALLOWED_HOSTS` and `SITE_URL` to the new domain.
+Render → service → **Settings → Custom Domains** → add `quickbite.com` → at your
+registrar `CNAME quickbite → <app>.onrender.com` (Render also wants `www`) → wait for
+the green check; TLS is issued automatically. Then update `ALLOWED_HOSTS`
+(`quickbite.com,www.quickbite.com,<app>.onrender.com`) and `SITE_URL`
+(`https://quickbite.com`) — `CSRF_TRUSTED_ORIGINS` is derived from `SITE_URL`, so
+checkout keeps working without another variable.
 
-### Google Analytics 4
-1. [analytics.google.com](https://analytics.google.com) → create property → **Web**
-   data stream → copy the Measurement ID (`G-XXXXXXXXXX`).
-2. Set `GA_MEASUREMENT_ID=G-XXXXXXXXXX` on Render. The `gtag.js` snippet is
-   already wired into `base.html` (IP-anonymised) and only renders when the
-   variable is set — no template edits needed.
-
-### Google Search Console
-1. [search.google.com/search-console](https://search.google.com/search-console) →
-   add property → **HTML tag** method → copy the `content="..."` token.
-2. Set `SEARCH_CONSOLE_TOKEN=<token>` on Render (it renders the verification meta
-   tag), then click **Verify**.
-3. **Sitemaps** → submit `sitemap.xml`. It's generated live from your database
-   (dishes, restaurants, categories, static pages) and `robots.txt` already
-   points at it.
+> `SECURE_HSTS_SECONDS` is already 30 days with `includeSubDomains`. Once HTTPS is
+> proven solid, raise it (`settings.py`) before you ever submit to the browser
+> preload list — HSTS is not undoable for the TTL you picked.
 
 ### Backups
-- **Database:** Render free tier: nightly snapshots are a paid add-on, so schedule
-  a dump instead — a GitHub Action with `pg_dump $DATABASE_URL > backup.sql`
-  pushed to a private repo weekly is free and sufficient at this scale.
-- **Media:** keep seed images in git (already done); if you add a Disk, back it up
-  with a periodic `tar` to object storage.
-- **Code:** GitHub *is* the backup — every deploy is a commit.
+- **Neon** keeps point-in-time restore history (6 h on Free, up to 7 days on paid) —
+  Branches → *restore* to fork the data at a moment in time.
+- For a real dump, a weekly scheduled GitHub Action is free:
+  `pg_dump "$DATABASE_URL" | gzip` → upload as an artifact or push to a private repo.
+  Run it with the **direct** URL, not the pooler one.
+- **Media:** seed photos are in git; a mounted disk needs its own snapshot policy.
 
-### Monitoring
-- **Uptime:** [UptimeRobot](https://uptimerobot.com) free — ping `/` every 5 min,
-  email on downtime.
-- **Errors:** Render → your service → **Logs** tab shows Django's console logging
-  (configured in `settings.py`). For alerting, add Sentry (free tier) later:
-  `pip install sentry-sdk`, `sentry_sdk.init(dsn=...)` in `settings.py`.
-- **Health:** the Blueprint sets `healthCheckPath: /` — Render restarts the app
-  automatically if it stops responding.
+### Analytics & Search Console
+Set `GA_MEASUREMENT_ID=G-XXXXXXXXXX` and `SEARCH_CONSOLE_TOKEN=<token>` on Render;
+`base.html` already emits the gtag snippet and the verification meta tag only when
+those exist. `/sitemap.xml` is generated live from the database and `robots.txt`
+points at it — submit it in Search Console. `/healthz` is intentionally absent from
+both.
+
+### Health & logs
+- `healthCheckPath: /healthz` → Render restarts a wedged instance and gates new deploys
+  on it. `?db=1` turns it into a strict readiness probe (503 when Postgres is
+  unreachable) — use that variant for alerting, and plain `/healthz` for uptime.
+- Django logs go to stdout → service **Logs** tab.
+- Want error grouping? `pip install sentry-sdk`, then
+  `sentry_sdk.init(dsn=..., traces_sample_rate=0.0)` in `settings.py`.
+
+### Rollback
+**Deploys** tab → any earlier deploy → **Rollback** (immutable builds). Keep
+migrations additive so the older code still runs against the newer schema; Neon
+branches let you test a risky migration on a copy of production data first.
 
 ---
 
-## Appendix A — PythonAnywhere (Option A) instead
+## Appendix A — PythonAnywhere instead
 
-1. Sign up (free "Beginner" account) → **Web** tab → *Add a new web app* →
-   **Manual configuration**, Python 3.13.
-2. **Files** tab: upload the repo (or clone via a Bash console:
-   `git clone https://github.com/<you>/quickbite.git`).
-3. Bash console:
+1. Free *Beginner* account → **Web** → *Add a new web app* → **Manual
+   configuration**, Python 3.13.
+2. Bash console: `git clone https://github.com/<you>/quickbite.git && cd quickbite`
+   then
    ```bash
-   cd quickbite
    pip install --user -r requirements.txt
-   python manage.py minify_static && python manage.py collectstatic
-   python manage.py migrate && python manage.py seed_data
-   python manage.py createsuperuser
+   python manage.py minify_static && python manage.py collectstatic --noinput
+   python manage.py migrate && python manage.py seed_data && python manage.py restore_seed_media
    ```
-4. Create `.env` in the project dir with `QUICKBITE_DEBUG=False`,
-   `SECRET_KEY=...`, `ALLOWED_HOSTS=<you>.pythonanywhere.com`,
-   `SITE_URL=https://<you>.pythonanywhere.com`.
-5. **Web** tab:
-   - *Source code*: `/home/<you>/quickbite`
-   - *WSGI file* — edit to:
-     ```python
-     import os, sys
-     from decouple import AutoConfig
-     path = '/home/<you>/quickbite'
-     if path not in sys.path:
-         sys.path.append(path)
-     os.chdir(path)
-     from django.core.wsgi import get_wsgi_application
-     application = get_wsgi_application()
-     ```
-   - *Static files*: URL `/static/` → dir `/home/<you>/quickbite/staticfiles/`
-     and URL `/media/` → `/home/<you>/quickbite/media/`
-6. Reload the web app. Free accounts renew every 3 months (one click) and must
-   use PythonAnywhere' outbound whitelist — SMTP to Brevo works.
+3. Create `.env` in the project dir: `QUICKBITE_DEBUG=False`, `SECRET_KEY=…`,
+   `ALLOWED_HOSTS=<you>.pythonanywhere.com`, `SITE_URL=https://<you>.pythonanywhere.com`,
+   and the Neon `DATABASE_URL`.
+4. **Web** tab → *Source code* `/home/<you>/quickbite`; WSGI file:
+   ```python
+   import os, sys
+   from decouple import AutoConfig
+   path = '/home/<you>/quickbite'
+   if path not in sys.path:
+       sys.path.append(path)
+   os.chdir(path)
+   from django.core.wsgi import get_wsgi_application
+   application = get_wsgi_application()
+   ```
+   Static files: `/static/` → `…/quickbite/staticfiles/`, `/media/` →
+   `…/quickbite/media/` (their own static-file serving beats `serve_media` here).
+5. Reload. Free accounts must renew every 3 months (one click); outbound is
+   whitelisted, and SMTP to Brevo works.
 
-## Appendix B — Railway (Option C), in short
+## Appendix B — Railway / Fly.io in short
 
-`railway init` inside the repo → `railway up` → `railway add postgresql` →
-Railway injects `DATABASE_URL` automatically (our settings already read it) →
-set `QUICKBITE_DEBUG=False`, `SECRET_KEY`, `ALLOWED_HOSTS`, `SITE_URL` →
-Settings → Networking → **Generate domain**. Note: Railway's free plan is
-trial credits, not a perpetual free tier.
-
----
-
-## Rollback plan
-
-Every Render deploy is immutable — **Deploys** tab → any previous deploy →
-**Rollback**. Database migrations are the only non-reversible part; keep them
-additive (no destructive `migrations.RemoveField`) between releases.
+Both inject `DATABASE_URL` the same way; `quickbite/db.py` handles their Postgres
+strings too (`postgres://…`). On Railway: `railway init` → `railway add postgresql` →
+`railway up`, then set `QUICKBITE_DEBUG=False`, `SECRET_KEY`, `ALLOWED_HOSTS`,
+`SITE_URL`, `USE_X_FORWARDED_HOST=True`. Note Railway's free offer is trial credits,
+not a perpetual tier. Fly: `fly launch` → `fly postgres create` → secrets — and keep
+`SECURE_SSL_REDIRECT` only if Fly's machine actually terminates TLS for you.

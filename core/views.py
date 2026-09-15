@@ -478,6 +478,7 @@ def robots_txt(request):
         'Disallow: /checkout/',
         'Disallow: /orders/',
         'Disallow: /location/',
+        'Disallow: /healthz',   # Render's probe, not content
         '',
         f'Sitemap: {request.scheme}://{request.get_host()}/sitemap.xml',
     ])

@@ -18,6 +18,9 @@ whitenoise==6.12.0
 # makes production installs one command.
 psycopg[binary]==3.3.5
 
+# Application server (Render's startCommand: gunicorn quickbite.wsgi:application)
+gunicorn==23.0.0
+
 # Static asset minification (python manage.py minify_static)
 rcssmin==1.2.2
 rjsmin==1.2.5
