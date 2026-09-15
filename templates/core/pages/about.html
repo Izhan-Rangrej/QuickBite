@@ -1,0 +1,45 @@
+{% extends 'core/pages/base_page.html' %}
+
+{% block title %}About Us | QuickBite{% endblock %}
+{% block meta_description %}QuickBite is a food delivery platform connecting hungry customers with the best local restaurants — order in minutes, track in real time.{% endblock %}
+{% block page_tag %}🧡 Our story{% endblock %}
+{% block crumb %}About Us{% endblock %}
+{% block page_heading_block %}About <span class="gradient-text">QuickBite</span>{% endblock %}
+
+{% block prose %}
+    <p class="qb-prose-lead">
+        QuickBite started with a simple frustration: great food shouldn't be hard to get.
+        We built a platform where your favourite neighbourhood restaurants are a tap away,
+        and every order is trackable from the moment the kitchen fires up the pan.
+    </p>
+
+    <div class="qb-stat-strip">
+        <div class="qb-stat-pill"><strong>{{ restaurant_count }}</strong><span>partner restaurants</span></div>
+        <div class="qb-stat-pill"><strong>{{ dish_count }}</strong><span>dishes on the menu</span></div>
+        <div class="qb-stat-pill"><strong>~30</strong><span>minute average delivery</span></div>
+        <div class="qb-stat-pill"><strong>4.6★</strong><span>average rating</span></div>
+    </div>
+
+    <h3>What we do differently</h3>
+    <ul>
+        <li><strong>Honest ETAs.</strong> Delivery estimates come from real prep times and real
+            distances — not a marketing number.</li>
+        <li><strong>Transparent pricing.</strong> Item totals, delivery fee, GST and coupon
+            discounts are itemised on every bill and invoice.</li>
+        <li><strong>Reviews you can trust.</strong> Only customers with a delivered order can
+            review a dish, so ratings reflect actual meals.</li>
+        <li><strong>Fair to partners.</strong> Restaurant owners get their own panel with live
+            orders, dish controls and earnings.</li>
+    </ul>
+
+    <h3>How it works</h3>
+    <ol>
+        <li>Browse the menu or search for a craving.</li>
+        <li>Add dishes to your cart — mix and match across restaurants.</li>
+        <li>Check out with a saved address and Cash on Delivery.</li>
+        <li>Track the order live until it reaches your door.</li>
+    </ol>
+
+    <p>Questions? Read the <a href="{% url 'core:faq' %}">FAQ</a> or
+       <a href="{% url 'core:contact' %}">drop us a line</a>.</p>
+{% endblock %}

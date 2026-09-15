@@ -1,0 +1,48 @@
+{% extends 'core/pages/base_page.html' %}
+
+{% block title %}Contact Us | QuickBite{% endblock %}
+{% block meta_description %}Get in touch with the QuickBite team — order issues, restaurant partnerships, feedback.{% endblock %}
+{% block page_tag %}💬 We're listening{% endblock %}
+{% block crumb %}Contact{% endblock %}
+{% block page_heading_block %}Contact <span class="gradient-text">Us</span>{% endblock %}
+
+{% block prose %}
+    <div class="qb-contact-layout">
+        <form method="post" class="qb-contact-form">
+            {% csrf_token %}
+            {% for field in form %}
+            <div class="qb-form-group">
+                <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                {{ field }}
+                {% if field.errors %}<small style="color:#C62828;">{{ field.errors|striptags }}</small>{% endif %}
+            </div>
+            {% endfor %}
+            <button type="submit" class="btn btn-primary">
+                <i class='bx bx-send'></i> Send message
+            </button>
+        </form>
+
+        <aside class="qb-contact-aside">
+            <div class="qb-contact-card">
+                <i class='bx bx-phone-call'></i>
+                <h4>Call us</h4>
+                <p>+91 98765 43210<br><small>Mon–Sun, 9 AM – 11 PM</small></p>
+            </div>
+            <div class="qb-contact-card">
+                <i class='bx bx-envelope'></i>
+                <h4>Email</h4>
+                <p>hello@quickbite.com<br><small>We reply within 24 hours</small></p>
+            </div>
+            <div class="qb-contact-card">
+                <i class='bx bx-map'></i>
+                <h4>Head office</h4>
+                <p>123 Food Street, Vadodara,<br>Gujarat 390007, India</p>
+            </div>
+            <div class="qb-contact-card">
+                <i class='bx bx-help-circle'></i>
+                <h4>Quick answers</h4>
+                <p>Most questions are answered in the <a href="{% url 'core:faq' %}">FAQ</a>.</p>
+            </div>
+        </aside>
+    </div>
+{% endblock %}

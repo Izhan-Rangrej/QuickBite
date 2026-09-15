@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+
+{% block title %}{% block page_title_tag %}{{ page_heading|default:"Page" }}{% endblock %} | QuickBite{% endblock %}
+
+{% block content %}
+    <div class="qb-page">
+        <div class="container">
+            <nav class="qb-breadcrumb" aria-label="Breadcrumb">
+                <a href="{% url 'core:home' %}"><i class='bx bx-home'></i> Home</a>
+                <i class='bx bx-chevron-right'></i>
+                <span class="current">{% block crumb %}{{ page_heading }}{% endblock %}</span>
+            </nav>
+
+            <div class="section-header" data-aos="fade-up">
+                <span class="section-tag">{% block page_tag %}📄{% endblock %}</span>
+                <h2>{% block page_heading_block %}{{ page_heading }}{% endblock %}</h2>
+            </div>
+
+            <article class="qb-prose" data-aos="fade-up">
+                {% block prose %}{% endblock %}
+            </article>
+        </div>
+    </div>
+{% endblock %}

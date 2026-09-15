@@ -1,0 +1,22 @@
+{% comment %}Star-input review form. Expects: target_type ('dish'|'restaurant'),
+target_id, next URL; optional order_id for verified reviews.{% endcomment %}
+<form method="post" action="{% url 'reviews:add' %}" class="qb-review-form">
+    {% csrf_token %}
+    <input type="hidden" name="target_type" value="{{ target_type }}">
+    <input type="hidden" name="target_id" value="{{ target_id }}">
+    <input type="hidden" name="next" value="{{ next }}">
+    {% if order_id %}<input type="hidden" name="order_id" value="{{ order_id }}">{% endif %}
+
+    <div class="qb-star-input" role="radiogroup" aria-label="Your rating">
+        <input type="radio" id="star5-{{ target_id }}-{{ target_type }}" name="rating" value="5" required><label for="star5-{{ target_id }}-{{ target_type }}" title="5 stars">★</label>
+        <input type="radio" id="star4-{{ target_id }}-{{ target_type }}" name="rating" value="4"><label for="star4-{{ target_id }}-{{ target_type }}" title="4 stars">★</label>
+        <input type="radio" id="star3-{{ target_id }}-{{ target_type }}" name="rating" value="3"><label for="star3-{{ target_id }}-{{ target_type }}" title="3 stars">★</label>
+        <input type="radio" id="star2-{{ target_id }}-{{ target_type }}" name="rating" value="2"><label for="star2-{{ target_id }}-{{ target_type }}" title="2 stars">★</label>
+        <input type="radio" id="star1-{{ target_id }}-{{ target_type }}" name="rating" value="1"><label for="star1-{{ target_id }}-{{ target_type }}" title="1 star">★</label>
+    </div>
+    <textarea name="comment" class="qb-input" rows="3" maxlength="1000"
+              placeholder="What did you think? Taste, portion, packaging..."></textarea>
+    <button type="submit" class="btn btn-primary btn-sm">
+        <i class='bx bx-send'></i> Submit review
+    </button>
+</form>

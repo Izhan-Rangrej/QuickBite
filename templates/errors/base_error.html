@@ -1,0 +1,74 @@
+{% load static %}<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block error_title %}Something went wrong{% endblock %} | QuickBite</title>
+    <meta name="robots" content="noindex">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🍔</text></svg>">
+    <style>
+        :root { --primary: #FF5722; --primary-dark: #E64A19; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #FFF8F5 0%, #FFEDE5 50%, #FFF3E0 100%);
+            color: #212121; min-height: 100vh;
+            display: flex; align-items: center; justify-content: center; padding: 24px;
+        }
+        .qb-error {
+            max-width: 560px; text-align: center; background: rgba(255,255,255,.9);
+            backdrop-filter: blur(10px); border-radius: 24px;
+            padding: 54px 40px 46px; box-shadow: 0 24px 70px rgba(255,87,34,.16);
+            animation: rise .5s ease both;
+        }
+        @keyframes rise { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: none; } }
+        .qb-error-emoji {
+            font-size: 76px; line-height: 1; display: inline-block; margin-bottom: 6px;
+            animation: wobble 3.2s ease-in-out infinite;
+        }
+        @keyframes wobble {
+            0%, 100% { transform: rotate(-7deg); }
+            50%      { transform: rotate(7deg); }
+        }
+        .qb-error-code {
+            font-size: 84px; font-weight: 800; line-height: 1;
+            background: linear-gradient(135deg, var(--primary), #FF9800);
+            -webkit-background-clip: text; background-clip: text; color: transparent;
+        }
+        .qb-error h1 { font-size: 25px; margin: 12px 0 10px; }
+        .qb-error p { color: #777; font-size: 14.5px; line-height: 1.75; margin-bottom: 26px; }
+        .qb-error-actions { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+        .qb-error-btn {
+            display: inline-flex; align-items: center; gap: 8px;
+            padding: 12px 26px; border-radius: 30px; font-size: 14px; font-weight: 600;
+            text-decoration: none; transition: transform .2s ease, box-shadow .2s ease;
+        }
+        .qb-error-btn.primary {
+            background: linear-gradient(135deg, var(--primary), #FF9800); color: #fff;
+            box-shadow: 0 8px 22px rgba(255,87,34,.35);
+        }
+        .qb-error-btn.primary:hover { transform: translateY(-3px); box-shadow: 0 12px 28px rgba(255,87,34,.45); }
+        .qb-error-btn.ghost { background: #fff; color: #555; border: 2px solid #eee; }
+        .qb-error-btn.ghost:hover { border-color: var(--primary); color: var(--primary); }
+        .qb-error-foot { margin-top: 24px; font-size: 12.5px; color: #aaa; }
+        .qb-error-foot a { color: var(--primary); font-weight: 600; text-decoration: none; }
+    </style>
+</head>
+<body>
+    <div class="qb-error">
+        <div class="qb-error-emoji">{% block error_emoji %}🍕{% endblock %}</div>
+        <div class="qb-error-code">{% block error_code %}Oops{% endblock %}</div>
+        <h1>{% block error_heading %}Something went wrong{% endblock %}</h1>
+        <p>{% block error_message %}We couldn't serve that page.{% endblock %}</p>
+        <div class="qb-error-actions">
+            <a href="/" class="qb-error-btn primary"><i class='bx bx-home'></i> Go to Home</a>
+            <a href="/menu/" class="qb-error-btn ghost"><i class='bx bx-dish'></i> Browse Menu</a>
+        </div>
+        <div class="qb-error-foot">
+            Still stuck? <a href="/contact/">Contact support</a> · <a href="/faq/">Read the FAQ</a>
+        </div>
+    </div>
+</body>
+</html>

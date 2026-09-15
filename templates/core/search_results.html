@@ -1,0 +1,99 @@
+{% extends 'base.html' %}
+
+{% block title %}{% if q %}"{{ q }}" — Search | {% endif %}QuickBite{% endblock %}
+
+{% block content %}
+    <div class="qb-page">
+        <div class="container">
+
+            <nav class="qb-breadcrumb" aria-label="Breadcrumb">
+                <a href="{% url 'core:home' %}"><i class='bx bx-home'></i> Home</a>
+                <i class='bx bx-chevron-right'></i>
+                <span class="current">Search</span>
+            </nav>
+
+            <div class="section-header" data-aos="fade-up" style="text-align:left;align-items:flex-start;">
+                <span class="section-tag">🔎 Search</span>
+                {% if q %}
+                <h2>Results for <span class="gradient-text">"{{ q }}"</span></h2>
+                <p>{{ total }} match{{ total|pluralize }} found</p>
+                {% else %}
+                <h2>Search <span class="gradient-text">QuickBite</span></h2>
+                <p>Type in the box below — dishes, restaurants and categories.</p>
+                {% endif %}
+            </div>
+
+            <form method="get" action="{% url 'core:search' %}" class="qb-search-hero" data-aos="fade-up">
+                <i class='bx bx-search'></i>
+                <input type="text" name="q" value="{{ q }}" placeholder="e.g. pizza, biryani, Sweet Spot..." autofocus>
+                <button type="submit" class="btn btn-primary">Search</button>
+            </form>
+
+            {% if q and total == 0 %}
+            <!-- ===== no results ===== -->
+            <div class="empty-state qb-empty-cart" data-aos="fade-up">
+                <div class="qb-empty-emoji">🕵️</div>
+                <h3>No results for "{{ q }}"</h3>
+                <p>Check the spelling, or try one of these instead:</p>
+            </div>
+            <div class="qb-search-suggest-grid" data-aos="fade-up">
+                {% for cat in suggested_categories %}
+                <a class="qb-suggest-card" href="{% url 'core:menu' %}?category={{ cat.slug }}">
+                    <i class='bx bx-category'></i>
+                    <strong>{{ cat.name }}</strong>
+                    <small>Browse {{ cat.name|lower }} dishes</small>
+                </a>
+                {% endfor %}
+            </div>
+            {% if popular_dishes %}
+            <h3 style="margin:34px 0 16px;color:#212121;">🔥 Popular right now</h3>
+            <div class="dishes-grid">
+                {% for dish in popular_dishes %}
+                    {% include 'core/includes/dish_card.html' with dish=dish %}
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            {% elif q %}
+            <!-- ===== mixed sections ===== -->
+            {% if dishes %}
+            <section class="qb-search-section" data-aos="fade-up">
+                <h3><i class='bx bx-dish'></i> Dishes <small>({{ dishes|length }})</small></h3>
+                <div class="dishes-grid">
+                    {% for dish in dishes %}
+                        {% include 'core/includes/dish_card.html' with dish=dish %}
+                    {% endfor %}
+                </div>
+            </section>
+            {% endif %}
+
+            {% if restaurants %}
+            <section class="qb-search-section" data-aos="fade-up">
+                <h3><i class='bx bx-store-alt'></i> Restaurants <small>({{ restaurants|length }})</small></h3>
+                <div class="restaurants-grid">
+                    {% for restaurant in restaurants %}
+                        {% include 'core/includes/restaurant_card.html' with restaurant=restaurant %}
+                    {% endfor %}
+                </div>
+            </section>
+            {% endif %}
+
+            {% if categories %}
+            <section class="qb-search-section" data-aos="fade-up">
+                <h3><i class='bx bx-category'></i> Categories <small>({{ categories|length }})</small></h3>
+                <div class="qb-search-suggest-grid">
+                    {% for cat in categories %}
+                    <a class="qb-suggest-card" href="{% url 'core:menu' %}?category={{ cat.slug }}">
+                        <i class='bx bx-category'></i>
+                        <strong>{{ cat.name }}</strong>
+                        <small>{{ cat.description|truncatechars:40 }}</small>
+                    </a>
+                    {% endfor %}
+                </div>
+            </section>
+            {% endif %}
+            {% endif %}
+
+        </div>
+    </div>
+{% endblock %}

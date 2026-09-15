@@ -1,0 +1,48 @@
+{% extends 'panel/base.html' %}
+
+{% block title %}My Dishes{% endblock %}
+{% block page_title %}{{ restaurant.name }} — Dishes{% endblock %}
+
+{% block admin_content %}
+    <div class="qb-panel">
+        <div class="qb-table-wrap">
+            <table class="qb-table">
+                <thead>
+                <tr><th></th><th>Dish</th><th>Category</th><th>Price (₹ / discount ₹)</th><th>Prep</th><th>Availability</th><th></th></tr>
+                </thead>
+                <tbody>
+                {% for dish in dishes %}
+                <tr>
+                    <td>{% if dish.image %}<img class="thumb" src="{{ dish.image.url }}" alt="{{ dish.name }}" loading="lazy">{% else %}<span class="thumb-ph">🍽️</span>{% endif %}</td>
+                    <td class="t-strong">{{ dish.name }}</td>
+                    <td>{{ dish.category.name }}</td>
+                    <td>
+                        <form method="post" action="{% url 'panel:dish_update' dish.pk %}" class="qb-price-inline">
+                            {% csrf_token %}
+                            <input type="number" name="price" value="{{ dish.price|floatformat:'2' }}" step="1" min="0" aria-label="Price">
+                            <input type="number" name="discount_price" value="{{ dish.discount_price|floatformat:'2'|default:'' }}" step="1" min="0" placeholder="—" aria-label="Discount price">
+                            <button type="submit" class="qb-btn ghost sm" title="Save prices"><i class='bx bx-save'></i></button>
+                        </form>
+                    </td>
+                    <td>{{ dish.preparation_time }} min</td>
+                    <td>
+                        <span class="qb-status-badge {% if dish.is_available %}delivered{% else %}cancelled{% endif %}">
+                            {% if dish.is_available %}Available{% else %}Sold out{% endif %}</span>
+                    </td>
+                    <td>
+                        <form method="post" action="{% url 'panel:dish_update' dish.pk %}">
+                            {% csrf_token %}<input type="hidden" name="toggle" value="1">
+                            <button class="qb-btn {% if dish.is_available %}danger{% else %}primary{% endif %} sm">
+                                <i class='bx bx-power-off'></i> Mark {% if dish.is_available %}sold out{% else %}available{% endif %}
+                            </button>
+                        </form>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="7" style="color:#999;text-align:center;padding:30px;">No dishes yet — ask the QuickBite team to add some.</td></tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+{% endblock %}

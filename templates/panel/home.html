@@ -1,0 +1,101 @@
+{% extends 'panel/base.html' %}
+
+{% block title %}Owner Panel{% endblock %}
+{% block page_title %}Owner Panel{% endblock %}
+
+{% block admin_content %}
+    <div class="qb-owner-hero">
+        {% if restaurant.image %}
+        <img src="{{ restaurant.image.url }}" alt="{{ restaurant.name }}" loading="lazy">
+        {% else %}
+        <div class="qb-owner-hero-ph">🏪</div>
+        {% endif %}
+        <div>
+            <h2>{{ restaurant.name }}</h2>
+            <p>{{ restaurant.get_cuisine_type_display }} · {{ restaurant.address }} ·
+                <a href="{{ restaurant.get_absolute_url }}" target="_blank" style="color:#fff;text-decoration:underline;">view on site</a></p>
+        </div>
+    </div>
+
+    <div class="qb-stat-grid">
+        <div class="qb-stat-card">
+            <div class="qb-stat-icon orange"><i class='bx bx-receipt'></i></div>
+            <div class="qb-stat-info">
+                <small>Total orders</small>
+                <strong>{{ orders_total }}</strong>
+                <span>{{ orders_pending }} in progress right now</span>
+            </div>
+        </div>
+        <div class="qb-stat-card">
+            <div class="qb-stat-icon green"><i class='bx bx-rupee'></i></div>
+            <div class="qb-stat-info">
+                <small>Earnings (delivered)</small>
+                <strong>₹{{ revenue_total|floatformat:"0" }}</strong>
+                <span>your dishes' share of delivered orders</span>
+            </div>
+        </div>
+        <div class="qb-stat-card">
+            <div class="qb-stat-icon blue"><i class='bx bx-dish'></i></div>
+            <div class="qb-stat-info">
+                <small>Dishes</small>
+                <strong>{{ dishes_available }} / {{ dishes_total }}</strong>
+                <span>currently available</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="qb-charts-row" style="grid-template-columns: 1fr 1.4fr;">
+        <div class="qb-panel">
+            <h3><i class='bx bx-bar-chart-alt-2'></i> Earnings — last 6 months</h3>
+            <div class="qb-chart-box small"><canvas id="earningsChart"></canvas></div>
+        </div>
+        <div class="qb-panel">
+            <h3><i class='bx bx-time-five'></i> Recent orders</h3>
+            <div class="qb-table-wrap">
+                <table class="qb-table">
+                    <tbody>
+                    {% for order in recent_orders %}
+                    <tr>
+                        <td class="t-strong">{{ order.order_id }}</td>
+                        <td>{{ order.user.display_name|truncatechars:18 }}</td>
+                        <td>{{ order.created_at|date:"d M, H:i" }}</td>
+                        <td><span class="qb-status-badge {{ order.status }}">{{ order.get_status_display }}</span></td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="4" style="color:#999;">No orders yet.</td></tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block admin_js %}
+    <script src="{% static_min 'js/chart.umd.min.js' %}"></script>
+    {{ earnings|json_script:"earningsData" }}
+    <script>
+        (function () {
+            const rows = JSON.parse(document.getElementById('earningsData').textContent);
+            Chart.defaults.font.family = "'Poppins', sans-serif";
+            Chart.defaults.color = '#888';
+            new Chart(document.getElementById('earningsChart'), {
+                type: 'bar',
+                data: {
+                    labels: rows.map(r => r.month),
+                    datasets: [{
+                        label: '₹',
+                        data: rows.map(r => r.amount),
+                        backgroundColor: 'rgba(46,125,50,.85)',
+                        borderRadius: 8, maxBarThickness: 40,
+                    }],
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: { y: { beginAtZero: true, grid: { color: '#f0f0f0' } }, x: { grid: { display: false } } },
+                },
+            });
+        })();
+    </script>
+{% endblock %}

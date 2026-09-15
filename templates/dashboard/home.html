@@ -1,0 +1,145 @@
+{% extends 'dashboard/base.html' %}
+
+{% block title %}Dashboard{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
+
+{% block admin_content %}
+    <!-- ===== Stats ===== -->
+    <div class="qb-stat-grid">
+        <div class="qb-stat-card">
+            <div class="qb-stat-icon orange"><i class='bx bx-receipt'></i></div>
+            <div class="qb-stat-info">
+                <small>Orders today</small>
+                <strong>{{ orders_today }}</strong>
+                <span>{{ orders_week }} this week · {{ orders_month }} this month</span>
+            </div>
+        </div>
+        <div class="qb-stat-card">
+            <div class="qb-stat-icon green"><i class='bx bx-rupee'></i></div>
+            <div class="qb-stat-info">
+                <small>Revenue</small>
+                <strong>₹{{ revenue_total|floatformat:"0" }}</strong>
+                <span>₹{{ revenue_today|floatformat:"0" }} today · ₹{{ revenue_month|floatformat:"0" }} this month</span>
+            </div>
+        </div>
+        <div class="qb-stat-card">
+            <div class="qb-stat-icon blue"><i class='bx bx-user-plus'></i></div>
+            <div class="qb-stat-info">
+                <small>Users</small>
+                <strong>{{ users_total }}</strong>
+                <span>{{ users_month }} joined this month</span>
+            </div>
+        </div>
+        <div class="qb-stat-card">
+            <div class="qb-stat-icon purple"><i class='bx bx-store-alt'></i></div>
+            <div class="qb-stat-info">
+                <small>Catalogue</small>
+                <strong>{{ restaurants_total }} / {{ dishes_total }}</strong>
+                <span>restaurants / dishes · {{ reviews_total }} reviews</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== Charts ===== -->
+    <div class="qb-charts-row">
+        <div class="qb-panel">
+            <h3><i class='bx bx-line-chart'></i> Revenue — last 14 days</h3>
+            <div class="qb-chart-box"><canvas id="revenueChart"></canvas></div>
+        </div>
+        <div class="qb-panel">
+            <h3><i class='bx bx-pie-chart-alt-2'></i> Orders by status</h3>
+            <div class="qb-chart-box"><canvas id="statusChart"></canvas></div>
+        </div>
+    </div>
+    <div class="qb-charts-row">
+        <div class="qb-panel">
+            <h3><i class='bx bx-bar-chart-alt-2'></i> Popular dishes (units sold)</h3>
+            <div class="qb-chart-box small"><canvas id="dishesChart"></canvas></div>
+        </div>
+        <div class="qb-panel">
+            <h3><i class='bx bx-time-five'></i> Recent orders</h3>
+            <div class="qb-table-wrap">
+                <table class="qb-table">
+                    <tbody>
+                    {% for order in recent_orders %}
+                    <tr>
+                        <td class="t-strong"><a href="{% url 'dashboard:order_view' order.order_id %}" style="color:#FF5722;">{{ order.order_id }}</a></td>
+                        <td>{{ order.user.display_name|truncatechars:16 }}</td>
+                        <td class="t-money">₹{{ order.total|floatformat:"2" }}</td>
+                        <td><span class="qb-status-badge {{ order.status }}">{{ order.get_status_display }}</span></td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="4" style="color:#999;">No orders yet.</td></tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block admin_js %}
+    <script src="{% static_min 'js/chart.umd.min.js' %}"></script>
+    {{ chart_data|json_script:"chartData" }}
+    <script>
+        (function () {
+            const data = JSON.parse(document.getElementById('chartData').textContent);
+            Chart.defaults.font.family = "'Poppins', sans-serif";
+            Chart.defaults.color = '#888';
+
+            new Chart(document.getElementById('revenueChart'), {
+                type: 'line',
+                data: {
+                    labels: data.daily.map(d => d.date),
+                    datasets: [{
+                        label: 'Revenue (₹)',
+                        data: data.daily.map(d => d.revenue),
+                        borderColor: '#FF5722',
+                        backgroundColor: 'rgba(255,87,34,.12)',
+                        fill: true, tension: .35,
+                        pointBackgroundColor: '#FF5722', pointRadius: 3,
+                    }],
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: { y: { beginAtZero: true, grid: { color: '#f0f0f0' } }, x: { grid: { display: false } } },
+                },
+            });
+
+            const palette = ['#FFC107', '#2196F3', '#9C27B0', '#FF5722', '#4CAF50', '#E53935'];
+            new Chart(document.getElementById('statusChart'), {
+                type: 'doughnut',
+                data: {
+                    labels: data.statuses.map(s => s.label),
+                    datasets: [{
+                        data: data.statuses.map(s => s.value),
+                        backgroundColor: palette, borderWidth: 2, borderColor: '#fff',
+                    }],
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false, cutout: '62%',
+                    plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, padding: 14 } } },
+                },
+            });
+
+            new Chart(document.getElementById('dishesChart'), {
+                type: 'bar',
+                data: {
+                    labels: data.top_dishes.map(d => d.name),
+                    datasets: [{
+                        label: 'Units',
+                        data: data.top_dishes.map(d => d.qty),
+                        backgroundColor: 'rgba(255,87,34,.85)',
+                        borderRadius: 8, maxBarThickness: 46,
+                    }],
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false, indexAxis: 'y',
+                    plugins: { legend: { display: false } },
+                    scales: { x: { beginAtZero: true, grid: { color: '#f0f0f0' } }, y: { grid: { display: false } } },
+                },
+            });
+        })();
+    </script>
+{% endblock %}

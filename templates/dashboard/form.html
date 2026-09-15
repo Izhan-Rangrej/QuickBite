@@ -1,0 +1,42 @@
+{% extends 'dashboard/base.html' %}
+
+{% block title %}{{ title }}{% endblock %}
+{% block page_title %}{{ title }}{% endblock %}
+
+{% block admin_content %}
+    <div class="qb-panel">
+        <form method="post" enctype="multipart/form-data" class="qb-admin-form">
+            {% csrf_token %}
+            {% if form.non_field_errors %}
+            <div class="qb-form-errors">{{ form.non_field_errors }}</div>
+            {% endif %}
+
+            {% for field in form %}
+                {% if field.field.widget.input_type == 'checkbox' %}
+                <div class="checkbox-row">
+                    {{ field }} <label style="margin:0;">{{ field.label }}</label>
+                    {% if field.errors %}<small style="color:#C62828;">{{ field.errors|striptags }}</small>{% endif %}
+                </div>
+                {% elif field.name == 'description' %}
+                <div class="full">
+                    <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                    {{ field }}
+                    {% if field.errors %}<small style="color:#C62828;">{{ field.errors|striptags }}</small>{% endif %}
+                </div>
+                {% else %}
+                <div>
+                    <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                    {{ field }}
+                    {% if field.help_text %}<small style="color:#aaa;font-size:11px;">{{ field.help_text }}</small>{% endif %}
+                    {% if field.errors %}<small style="color:#C62828;display:block;">{{ field.errors|striptags }}</small>{% endif %}
+                </div>
+                {% endif %}
+            {% endfor %}
+
+            <div class="qb-form-actions">
+                <button type="submit" class="qb-btn primary"><i class='bx bx-save'></i> Save</button>
+                <a href="{% url back_url %}" class="qb-btn ghost">Cancel</a>
+            </div>
+        </form>
+    </div>
+{% endblock %}

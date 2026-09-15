@@ -1,0 +1,48 @@
+{% extends 'dashboard/base.html' %}
+
+{% block title %}Reviews{% endblock %}
+{% block page_title %}Reviews{% endblock %}
+
+{% block admin_content %}
+    <div class="qb-admin-toolbar">
+        <a href="{% url 'dashboard:reviews' %}" class="qb-chip {% if not cur_filter %}active{% endif %}">All</a>
+        <a href="?filter=reported" class="qb-chip {% if cur_filter == 'reported' %}active{% endif %}">🚩 Reported</a>
+        <a href="?filter=unapproved" class="qb-chip {% if cur_filter == 'unapproved' %}active{% endif %}">Hidden</a>
+    </div>
+
+    {% for review in reviews %}
+    <div class="qb-mod-review {% if review.reported %}reported{% endif %}">
+        <div class="qb-mod-review-head">
+            <strong>{{ review.user.display_name }}</strong>
+            <span style="color:#FFB300;">{% for i in "12345" %}{% if forloop.counter <= review.rating %}★{% else %}<span style="color:#e0e0e0;">★</span>{% endif %}{% endfor %}</span>
+            <span style="color:#555;font-size:13px;">
+                on <strong>{{ review.target }}</strong>
+                {% if review.target.get_absolute_url %}
+                <a href="{{ review.target.get_absolute_url }}" target="_blank" style="color:#FF5722;"><i class='bx bx-link-external'></i></a>
+                {% endif %}
+            </span>
+            {% if review.is_verified %}<span class="qb-verified-chip"><i class='bx bx-badge-check'></i> Verified</span>{% endif %}
+            {% if review.reported %}<span class="qb-status-badge cancelled">Reported</span>{% endif %}
+            {% if not review.is_approved %}<span class="qb-status-badge pending">Hidden</span>{% endif %}
+            <small style="margin-left:auto;">{{ review.created_at|date:"d M Y, H:i" }} · {{ review.helpful_count }} found helpful</small>
+        </div>
+        {% if review.comment %}<p style="font-size:13.5px;color:#555;margin:6px 0 10px;">“{{ review.comment }}”</p>{% endif %}
+        <div style="display:flex;gap:8px;">
+            <form method="post" action="{% url 'dashboard:review_moderate' review.pk %}">
+                {% csrf_token %}<input type="hidden" name="action" value="toggle">
+                <button class="qb-btn {% if review.is_approved %}ghost{% else %}primary{% endif %} sm">
+                    <i class='bx {% if review.is_approved %}bx-hide{% else %}bx-check{% endif %}'></i>
+                    {% if review.is_approved %}Hide{% else %}Approve{% endif %}
+                </button>
+            </form>
+            <form method="post" action="{% url 'dashboard:review_moderate' review.pk %}"
+                  onsubmit="return confirm('Delete this review permanently?');">
+                {% csrf_token %}<input type="hidden" name="action" value="delete">
+                <button class="qb-btn danger sm"><i class='bx bx-trash'></i> Delete</button>
+            </form>
+        </div>
+    </div>
+    {% empty %}
+    <div class="qb-panel" style="text-align:center;color:#999;padding:40px;">No reviews here.</div>
+    {% endfor %}
+{% endblock %}

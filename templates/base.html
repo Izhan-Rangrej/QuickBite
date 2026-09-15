@@ -1,0 +1,331 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}{{ site_name }} — {{ site_tagline }}{% endblock %}</title>
+
+    {% block meta %}
+    <meta name="description" content="{% block meta_description %}{{ site_name }} delivers hot, fresh food from the best restaurants near you. Order pizza, biryani, burgers and more in minutes.{% endblock %}">
+    <meta name="keywords" content="{% block meta_keywords %}food delivery, restaurant, order food online, pizza, biryani, burgers, {{ site_name }}{% endblock %}">
+    {% endblock %}
+
+    <link rel="canonical" href="{% block canonical %}{{ site_url }}{{ request.path }}{% endblock %}">
+    {% if search_console_token %}
+    <meta name="google-site-verification" content="{{ search_console_token }}">
+    {% endif %}
+
+    <!-- Open Graph / social sharing -->
+    {% block og %}
+    <meta property="og:site_name" content="{{ site_name }}">
+    <meta property="og:type" content="{% block og_type %}website{% endblock %}">
+    <meta property="og:title" content="{% block og_title %}{{ site_name }} — {{ site_tagline }}{% endblock %}">
+    <meta property="og:description" content="{% block og_description %}{{ site_tagline }} — order from the best restaurants near you.{% endblock %}">
+    <meta property="og:url" content="{{ site_url }}{{ request.path }}">
+    <meta property="og:image" content="{% block og_image %}{{ site_url }}/static/images/seed/cat_pizza.jpg{% endblock %}">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="{{ site_name }} — {{ site_tagline }}">
+    <meta name="twitter:description" content="Order from the best restaurants near you.">
+    {% endblock %}
+
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🍔</text></svg>">
+    <meta name="theme-color" content="#FF5722">
+
+    <!-- Structured data -->
+    {% block structured_data %}
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "name": "{{ site_name }}",
+      "url": "{{ site_url }}",
+      "potentialAction": {
+        "@type": "SearchAction",
+        "target": "{{ site_url }}/search/?q={search_term_string}",
+        "query-input": "required name=search_term_string"
+      }
+    }
+    </script>
+    {% endblock %}
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+    <!-- Boxicons -->
+    <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
+
+    <!-- AOS Animation Library -->
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="{% static_min 'css/style.css' %}">
+
+    <!-- Page components (breadcrumbs, detail pages, filters — qb-* classes only) -->
+    <link rel="stylesheet" href="{% static_min 'css/pages.css' %}">
+
+    {% if ga_measurement_id %}
+    <!-- Google Analytics 4 -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id={{ ga_measurement_id }}"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag() { dataLayer.push(arguments); }
+        gtag('js', new Date());
+        gtag('config', '{{ ga_measurement_id }}', { anonymize_ip: true });
+    </script>
+    {% endif %}
+</head>
+<body>
+
+    <!-- ============ PRELOADER ============ -->
+    <div class="preloader" id="preloader">
+        <div class="spinner">
+            <div class="bounce1"></div>
+            <div class="bounce2"></div>
+            <div class="bounce3"></div>
+        </div>
+        <p>Cooking something delicious...</p>
+    </div>
+
+    <!-- ============ NAVBAR ============ -->
+    {% block navbar %}
+    <nav class="navbar" id="navbar">
+        <div class="container nav-container">
+            <a href="{% url 'core:home' %}" class="logo">
+                <i class='bx bxs-dish'></i>
+                <span>Quick<span class="highlight">Bite</span></span>
+            </a>
+
+            <ul class="nav-links" id="navLinks">
+                <li><a href="{% url 'core:home' %}#home" class="active">Home</a></li>
+                <li><a href="{% url 'core:menu' %}">Menu</a></li>
+                <li><a href="{% url 'core:restaurants' %}">Restaurants</a></li>
+                <li><a href="{% url 'core:home' %}#categories">Categories</a></li>
+                <li><a href="{% url 'core:home' %}#offers">Offers</a></li>
+                <li><a href="{% url 'core:home' %}#download">App</a></li>
+            </ul>
+
+            <div class="nav-actions">
+                <!-- ===== Deliver to (session location) ===== -->
+                <div class="qb-location" id="locationMenu">
+                    <button type="button" class="qb-location-btn" id="locationBtn" aria-haspopup="true">
+                        <i class='bx bx-map'></i>
+                        <span class="qb-location-text">
+                            <small>Deliver to</small>
+                            <strong id="locationLabel">{{ delivery_label|default:"Set location" }}</strong>
+                        </span>
+                        <i class='bx bx-chevron-down'></i>
+                    </button>
+                    <div class="qb-location-popup" id="locationPopup">
+                        <h4><i class='bx bx-current-location'></i> Choose delivery location</h4>
+                        <button type="button" class="qb-loc-use" id="useMyLocation">
+                            <i class='bx bx-target-lock'></i> Use my current location
+                        </button>
+                        <p class="qb-loc-status" id="locStatus"></p>
+                        <div class="qb-loc-cities">
+                            <button type="button" data-city="vadodara">Vadodara</button>
+                            <button type="button" data-city="ahmedabad">Ahmedabad</button>
+                            <button type="button" data-city="surat">Surat</button>
+                            <button type="button" data-city="mumbai">Mumbai</button>
+                            <button type="button" data-city="delhi">Delhi</button>
+                            <button type="button" data-city="bengaluru">Bengaluru</button>
+                        </div>
+                        {% if has_location %}
+                        <form method="post" action="{% url 'core:location_clear' %}" style="margin-top:10px;">
+                            {% csrf_token %}
+                            <input type="hidden" name="next" value="{{ request.path }}">
+                            <button type="submit" class="qb-loc-clear">Clear location</button>
+                        </form>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="search-box qb-search-ac" id="searchAc">
+                    <form action="{% url 'core:search' %}" method="get" role="search">
+                        <i class='bx bx-search'></i>
+                        <input type="text" name="q" id="globalSearch" placeholder="Search food..."
+                               autocomplete="off" aria-label="Search dishes, restaurants, categories">
+                    </form>
+                    <div class="qb-suggest" id="suggestBox" hidden></div>
+                </div>
+                <div class="cart-icon" id="cartIcon">
+                    <i class='bx bx-cart'></i>
+                    <span class="cart-count{% if not cart_count %} qb-hidden{% endif %}" id="cartCount">{{ cart_count }}</span>
+                </div>
+
+                {% if user.is_authenticated %}
+                <!-- ===== Logged in: avatar + dropdown ===== -->
+                <div class="qb-user-menu" id="userMenu">
+                    <button type="button" class="qb-avatar-btn" id="avatarBtn" aria-haspopup="true" aria-expanded="false">
+                        {% if user.profile_picture %}
+                        <img src="{{ user.profile_picture.url }}" alt="{{ user.username }}">
+                        {% else %}
+                        <span>{{ user.initials }}</span>
+                        {% endif %}
+                        <i class='bx bx-chevron-down'></i>
+                    </button>
+                    <div class="qb-dropdown" id="userDropdown">
+                        <div class="qb-dropdown-header">
+                            <strong>{{ user.display_name }}</strong>
+                            <small>{{ user.email|default:"no email set" }}</small>
+                        </div>
+                        <a href="{% url 'accounts:profile' %}"><i class='bx bx-user'></i> My Profile</a>
+                        <a href="{% url 'orders:my_orders' %}"><i class='bx bx-receipt'></i> My Orders</a>
+                        <a href="{% url 'cart:wishlist_page' %}"><i class='bx bx-heart'></i> My Wishlist</a>
+                        <a href="{% url 'accounts:profile_edit' %}"><i class='bx bx-map'></i> My Address</a>
+                        <a href="{% url 'accounts:password_change' %}"><i class='bx bx-lock-alt'></i> Change Password</a>
+                        {% if user.is_owner %}
+                        <a href="{% url 'panel:home' %}" class="qb-dd-accent"><i class='bx bx-store-alt'></i> Owner Panel</a>
+                        {% endif %}
+                        {% if user.is_staff %}
+                        <a href="{% url 'dashboard:home' %}" class="qb-dd-accent"><i class='bx bx-line-chart'></i> Dashboard</a>
+                        {% endif %}
+                        <form method="post" action="{% url 'accounts:logout' %}">
+                            {% csrf_token %}
+                            <button type="submit"><i class='bx bx-log-out'></i> Logout</button>
+                        </form>
+                    </div>
+                </div>
+                {% else %}
+                <!-- ===== Logged out: Sign In ===== -->
+                <a href="{% url 'accounts:login' %}" class="btn btn-primary nav-btn">Sign In</a>
+                {% endif %}
+
+                <div class="hamburger" id="hamburger">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>
+            </div>
+        </div>
+    </nav>
+    {% endblock navbar %}
+
+    <!-- ============ FLASH MESSAGES ============ -->
+    {% if messages %}
+    <div class="container qb-messages">
+        {% for message in messages %}
+        <div class="qb-alert qb-alert-{{ message.tags|default:'info' }}">
+            <i class='bx {% if message.tags == 'success' %}bx-check-circle{% elif message.tags == 'error' %}bx-error-circle{% else %}bx-info-circle{% endif %}'></i>
+            <span>{{ message }}</span>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <!-- ============ PAGE CONTENT (per-page sections) ============ -->
+    {% block content %}{% endblock %}
+
+    <!-- ============ FOOTER ============ -->
+    {% block footer %}
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-col">
+                    <a href="{% url 'core:home' %}" class="footer-logo">
+                        <i class='bx bxs-dish'></i>
+                        <span>Quick<span class="highlight">Bite</span></span>
+                    </a>
+                    <p>Your favorite food delivered hot and fresh to your doorstep.</p>
+                    <div class="social-links">
+                        <a href="#"><i class='bx bxl-facebook'></i></a>
+                        <a href="#"><i class='bx bxl-instagram'></i></a>
+                        <a href="#"><i class='bx bxl-twitter'></i></a>
+                        <a href="#"><i class='bx bxl-youtube'></i></a>
+                    </div>
+                </div>
+                <div class="footer-col">
+                    <h4>Quick Links</h4>
+                    <ul>
+                        <li><a href="{% url 'core:about' %}">About Us</a></li>
+                        <li><a href="{% url 'core:restaurants' %}">All Restaurants</a></li>
+                        <li><a href="{% url 'core:faq' %}">FAQ</a></li>
+                        <li><a href="{% url 'core:contact' %}">Contact Us</a></li>
+                    </ul>
+                </div>
+                <div class="footer-col">
+                    <h4>Legal</h4>
+                    <ul>
+                        <li><a href="{% url 'core:terms' %}">Terms &amp; Conditions</a></li>
+                        <li><a href="{% url 'core:privacy' %}">Privacy Policy</a></li>
+                        <li><a href="{% url 'core:refund' %}">Refund Policy</a></li>
+                        <li><a href="{% url 'core:sitemap' %}">Sitemap</a></li>
+                    </ul>
+                </div>
+                <div class="footer-col">
+                    <h4>Contact Us</h4>
+                    <ul class="contact-info">
+                        <li><i class='bx bx-map'></i> 123 Food Street, Mumbai, India</li>
+                        <li><i class='bx bx-phone'></i> +91 98765 43210</li>
+                        <li><i class='bx bx-envelope'></i> hello@quickbite.com</li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2024 QuickBite. All rights reserved. Made with ❤️</p>
+            </div>
+        </div>
+    </footer>
+    {% endblock footer %}
+
+    <!-- ============ CART SIDEBAR (dynamic — rendered from the real cart) ============ -->
+    <div class="cart-sidebar" id="cartSidebar">
+        <div class="cart-header">
+            <h3><i class='bx bx-cart'></i> Your Cart</h3>
+            <button class="close-cart" id="closeCart"><i class='bx bx-x'></i></button>
+        </div>
+        {% include 'cart/includes/sidebar.html' with lines=cart_lines totals=cart_totals %}
+    </div>
+    <div class="cart-overlay" id="cartOverlay"></div>
+
+    <!-- ============ BACK TO TOP ============ -->
+    <button class="back-to-top" id="backToTop">
+        <i class='bx bx-up-arrow-alt'></i>
+    </button>
+
+    <!-- ============ TOAST NOTIFICATION ============ -->
+    <div class="toast" id="toast">
+        <i class='bx bx-check-circle'></i>
+        <span id="toastMessage">Item added to cart!</span>
+    </div>
+
+    <!-- AOS Library -->
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+
+    <!-- Custom JS -->
+    <script src="{% static_min 'js/script.js' %}"></script>
+
+    <!-- Cart & Wishlist AJAX (fetch + CSRF + toasts) -->
+    <script src="{% static_min 'js/cart.js' %}"></script>
+
+    <!-- Global search autocomplete + delivery location (Phase 9) -->
+    <script src="{% static_min 'js/search.js' %}"></script>
+    <script src="{% static_min 'js/location.js' %}"></script>
+
+    <!-- User-menu dropdown (logged-in state) -->
+    <script>
+        (function () {
+            const menu = document.getElementById('userMenu');
+            if (!menu) return;
+            const btn = document.getElementById('avatarBtn');
+            const dropdown = document.getElementById('userDropdown');
+
+            btn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const open = menu.classList.toggle('open');
+                btn.setAttribute('aria-expanded', open);
+            });
+            document.addEventListener('click', (e) => {
+                if (!menu.contains(e.target)) {
+                    menu.classList.remove('open');
+                    btn.setAttribute('aria-expanded', 'false');
+                }
+            });
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') menu.classList.remove('open');
+            });
+        })();
+    </script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

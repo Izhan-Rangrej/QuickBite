@@ -1,0 +1,108 @@
+{% extends 'base.html' %}
+
+{% block title %}My Orders | QuickBite{% endblock %}
+
+{% block content %}
+    <div class="qb-page">
+        <div class="container">
+
+            <nav class="qb-breadcrumb" aria-label="Breadcrumb">
+                <a href="{% url 'core:home' %}"><i class='bx bx-home'></i> Home</a>
+                <i class='bx bx-chevron-right'></i>
+                <span class="current">My Orders</span>
+            </nav>
+
+            <div class="section-header" data-aos="fade-up" style="text-align:left;align-items:flex-start;">
+                <span class="section-tag">📦 {{ orders_count }} order{{ orders_count|pluralize }}</span>
+                <h2>My <span class="gradient-text">Orders</span></h2>
+            </div>
+
+            <!-- filters -->
+            <div class="qb-orders-toolbar" data-aos="fade-up">
+                <form method="get" class="qb-order-search" action="{% url 'orders:my_orders' %}">
+                    {% if current_status %}<input type="hidden" name="status" value="{{ current_status }}">{% endif %}
+                    <i class='bx bx-search'></i>
+                    <input type="text" name="q" value="{{ q }}" placeholder="Search by order ID (e.g. QB...)"
+                           aria-label="Search orders by ID">
+                    <button type="submit" class="qb-mini-btn" title="Search"><i class='bx bx-right-arrow-alt'></i></button>
+                </form>
+                <div class="qb-filter-chips">
+                    <a href="{% url 'orders:my_orders' %}{% if q %}?q={{ q|urlencode }}{% endif %}"
+                       class="qb-chip {% if not current_status %}active{% endif %}">All</a>
+                    {% for value, label in status_choices %}
+                    <a href="{% url 'orders:my_orders' %}?status={{ value }}{% if q %}&q={{ q|urlencode }}{% endif %}"
+                       class="qb-chip {% if current_status == value %}active{% endif %}">{{ label }}</a>
+                    {% endfor %}
+                </div>
+            </div>
+
+            {% if orders %}
+            <div class="qb-order-list">
+                {% for order in orders %}
+                <div class="qb-order-card" data-aos="fade-up">
+                    <div class="qb-order-card-head">
+                        <div>
+                            <h4>
+                                <a href="{% url 'orders:order_detail' order.order_id %}">{{ order.order_id }}</a>
+                                <span class="qb-status-badge {{ order.status }}">{{ order.get_status_display }}</span>
+                            </h4>
+                            <small><i class='bx bx-time-five'></i> {{ order.created_at|date:"d M Y, g:i A" }}
+                                · {{ order.items.count }} item{{ order.items.count|pluralize }}</small>
+                        </div>
+                        <div class="qb-order-total">
+                            <small>{% if order.status == 'cancelled' %}Total{% else %}{% if order.payment_method == 'cod' %}To pay{% else %}Paid{% endif %}{% endif %}</small>
+                            <strong>₹{{ order.total|floatformat:"2" }}</strong>
+                        </div>
+                    </div>
+
+                    <div class="qb-order-card-items">
+                        {% for item in order.items.all %}
+                        <span class="qb-order-thumb-wrap" title="{{ item.quantity }}× {{ item.dish_name }}">
+                            {% if item.image_url %}
+                            <img src="{{ item.image_url }}" alt="{{ item.dish_name }}" loading="lazy" decoding="async">
+                            {% else %}
+                            <span class="qb-order-thumb-ph">🍽️</span>
+                            {% endif %}
+                        </span>
+                        {% endfor %}
+                    </div>
+
+                    <div class="qb-order-card-actions">
+                        <a href="{% url 'orders:order_detail' order.order_id %}" class="btn btn-outline btn-sm">
+                            <i class='bx bx-current-location'></i> Track / Details
+                        </a>
+                        <form method="post" action="{% url 'orders:order_reorder' order.order_id %}" style="display:inline;">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-primary btn-sm">
+                                <i class='bx bx-refresh'></i> Reorder
+                            </button>
+                        </form>
+                        {% if order.can_cancel %}
+                        <form method="post" action="{% url 'orders:order_cancel' order.order_id %}" style="display:inline;"
+                              onsubmit="return confirm('Cancel order {{ order.order_id }}?');">
+                            {% csrf_token %}
+                            <button type="submit" class="qb-mini-btn danger" title="Cancel order">
+                                <i class='bx bx-x-circle'></i> Cancel
+                            </button>
+                        </form>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="empty-state qb-empty-cart" data-aos="fade-up">
+                <div class="qb-empty-emoji">{% if q or current_status %}🔍{% else %}📦{% endif %}</div>
+                <h3>{% if q or current_status %}No matching orders{% else %}No orders yet{% endif %}</h3>
+                <p>{% if q or current_status %}Try a different search or filter.{% else %}Your future orders will show up right here.{% endif %}</p>
+                {% if not q and not current_status %}
+                <a href="{% url 'core:menu' %}" class="btn btn-primary" style="margin-top:16px;">
+                    Browse Menu <i class='bx bxs-right-arrow-alt'></i>
+                </a>
+                {% endif %}
+            </div>
+            {% endif %}
+
+        </div>
+    </div>
+{% endblock %}

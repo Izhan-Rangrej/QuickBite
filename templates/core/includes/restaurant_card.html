@@ -1,0 +1,35 @@
+{# Reusable restaurant card — expects `restaurant`, optional `delay` (AOS delay, default '0') #}
+<div class="restaurant-card" data-aos="fade-up" data-aos-delay="{{ delay|default:'0' }}">
+    <div class="rest-img-wrapper">
+        {% if restaurant.image %}
+        <a href="{% url 'core:restaurant_detail' restaurant.slug %}">
+            <img src="{{ restaurant.image.url }}" alt="{{ restaurant.name }} — {{ restaurant.get_cuisine_type_display }} restaurant" loading="lazy" decoding="async">
+        </a>
+        {% else %}
+        <div class="img-placeholder">🏪</div>
+        {% endif %}
+        {% if restaurant.offer_text %}
+        <div class="rest-offer-badge">{{ restaurant.offer_text }}</div>
+        {% endif %}
+        {% if restaurant.is_promoted %}
+        <div class="rest-promoted">Promoted</div>
+        {% endif %}
+        {% if restaurant.loc and not restaurant.loc.delivers %}
+        <div class="rest-no-delivery">Out of delivery range</div>
+        {% endif %}
+    </div>
+    <div class="rest-info">
+        <div class="rest-header">
+            <h3><a class="qb-title-link" href="{% url 'core:restaurant_detail' restaurant.slug %}">{{ restaurant.name }}</a></h3>
+            <span class="rest-rating">{{ restaurant.rating }} <i class='bx bxs-star'></i></span>
+        </div>
+        <p class="rest-cuisine">{{ restaurant.get_cuisine_type_display }}, {{ restaurant.description|truncatechars:25 }}</p>
+        <div class="rest-meta">
+            <span><i class='bx bx-time-five'></i> {% if restaurant.loc %}{{ restaurant.loc.eta_minutes }}{% else %}{{ restaurant.delivery_time }}{% endif %} mins</span>
+            <span><i class='bx bx-rupee'></i> Min ₹{{ restaurant.min_order|floatformat:"-2" }}</span>
+            {% if restaurant.loc and restaurant.loc.distance_km is not None %}
+            <span class="rest-distance"><i class='bx bx-current-location'></i> {{ restaurant.loc.distance_km }} km</span>
+            {% endif %}
+        </div>
+    </div>
+</div>

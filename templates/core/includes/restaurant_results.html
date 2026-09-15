@@ -1,0 +1,30 @@
+{% comment %}AJAX partial — count + active tags + restaurant grid + pagination.{% endcomment %}
+<div class="qb-results-bar">
+    <span class="qb-result-count"><strong>{{ total_results }}</strong> restaurant{{ total_results|pluralize }} found</span>
+</div>
+
+{% if q or cuisine or rating or delivery or veg %}
+<div class="qb-active-tags">
+    {% if q %}<a class="qb-tag" href="?q=">“{{ q }}” <i class='bx bx-x'></i></a>{% endif %}
+    {% if cuisine %}<a class="qb-tag" href="?{{ base_qs }}&cuisine=">{{ cuisine }} <i class='bx bx-x'></i></a>{% endif %}
+    {% if rating %}<a class="qb-tag" href="?{{ base_qs }}&rating=">{{ rating }}★ & up <i class='bx bx-x'></i></a>{% endif %}
+    {% if delivery %}<a class="qb-tag" href="?{{ base_qs }}&delivery=">≤ {{ delivery }} min <i class='bx bx-x'></i></a>{% endif %}
+    {% if veg == '1' %}<a class="qb-tag" href="?{{ base_qs }}&veg=">🟢 Pure Veg <i class='bx bx-x'></i></a>{% endif %}
+    {% if veg == '0' %}<a class="qb-tag" href="?{{ base_qs }}&veg=">🔴 Non-Veg <i class='bx bx-x'></i></a>{% endif %}
+</div>
+{% endif %}
+
+<div class="restaurants-grid">
+    {% for restaurant in page_obj %}
+        {% cycle '0' '100' '200' as rest_delay silent %}
+        {% include 'core/includes/restaurant_card.html' with restaurant=restaurant delay=rest_delay %}
+    {% empty %}
+    <div class="empty-state">
+        <i class='bx bx-search-alt-2'></i>
+        <h3>No restaurants found</h3>
+        <p>Try a different search or clear the filters.</p>
+    </div>
+    {% endfor %}
+</div>
+
+{% include 'core/includes/pagination.html' %}

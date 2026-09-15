@@ -1,0 +1,55 @@
+{% comment %}Expects: reviews (queryset), avg_rating, review_count, rating_breakdown.{% endcomment %}
+<div class="qb-reviews" id="reviews">
+    <div class="qb-reviews-head">
+        <h3><i class='bx bx-star'></i> Reviews {% if review_count %}({{ review_count }}){% endif %}</h3>
+        {% if review_count %}
+        <div class="qb-rating-summary">
+            <div class="qb-rating-big">
+                <strong>{{ avg_rating }}</strong>
+                {% include 'reviews/includes/stars.html' with value=avg_rating %}
+                <small>{{ review_count }} review{{ review_count|pluralize }}</small>
+            </div>
+            <div class="qb-rating-bars">
+                {% for row in rating_breakdown %}
+                <div class="qb-rating-bar-row">
+                    <span>{{ row.star }}★</span>
+                    <div class="qb-rating-bar"><i style="width:{{ row.pct }}%"></i></div>
+                    <small>{{ row.count }}</small>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    {% for review in reviews %}
+    <div class="qb-review-card">
+        <div class="qb-review-avatar">{{ review.user.initials }}</div>
+        <div class="qb-review-body">
+            <div class="qb-review-meta">
+                <strong>{{ review.user.display_name }}</strong>
+                {% if review.is_verified %}<span class="qb-verified-chip"><i class='bx bx-badge-check'></i> Verified Order</span>{% endif %}
+                <small>{{ review.created_at|date:"d M Y" }}</small>
+            </div>
+            {% include 'reviews/includes/stars.html' with value=review.rating %}
+            {% if review.comment %}<p class="qb-review-text">{{ review.comment }}</p>{% endif %}
+            <div class="qb-review-actions">
+                <button type="button" class="qb-helpful-btn {% if request.user in review.helpful_users.all %}active{% endif %}"
+                        data-helpful-id="{{ review.pk }}">
+                    <i class='bx bx-like'></i> Helpful (<span class="count">{{ review.helpful_count }}</span>)
+                </button>
+                {% if request.user.is_authenticated and request.user != review.user %}
+                <button type="button" class="qb-report-btn" data-report-id="{{ review.pk }}">
+                    <i class='bx bx-flag'></i> Report
+                </button>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div class="qb-reviews-empty">
+        <i class='bx bx-message-square-detail'></i>
+        <p>No reviews yet — be the first to share your experience!</p>
+    </div>
+    {% endfor %}
+</div>

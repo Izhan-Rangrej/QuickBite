@@ -1,0 +1,456 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <!-- ============ HERO SECTION ============ -->
+    <section class="hero" id="home">
+        <div class="hero-bg-elements">
+            <div class="floating-food food-1">🍕</div>
+            <div class="floating-food food-2">🍔</div>
+            <div class="floating-food food-3">🌮</div>
+            <div class="floating-food food-4">🍜</div>
+            <div class="floating-food food-5">🍩</div>
+            <div class="floating-food food-6">🥗</div>
+            <div class="circle-decoration circle-1"></div>
+            <div class="circle-decoration circle-2"></div>
+            <div class="circle-decoration circle-3"></div>
+        </div>
+
+        <div class="container hero-container">
+            <div class="hero-content" data-aos="fade-right" data-aos-duration="1000">
+                <div class="hero-badge">
+                    <i class='bx bxs-bolt'></i>
+                    <span>No.1 Food Delivery App</span>
+                </div>
+                <h1>
+                    Fastest <span class="gradient-text">Delivery</span> &
+                    Easy <span class="gradient-text">Pickup</span>
+                </h1>
+                <p>Order your favourite food from the best restaurants near you. 
+                   Fresh, hot, and delivered in minutes!</p>
+                
+                <div class="hero-search">
+                    <div class="location-input">
+                        <i class='bx bx-current-location'></i>
+                        <input type="text" placeholder="Enter delivery address...">
+                    </div>
+                    <button class="btn btn-primary btn-lg">
+                        <i class='bx bx-search-alt'></i>
+                        Find Food
+                    </button>
+                </div>
+
+                <div class="hero-stats">
+                    <div class="stat-item">
+                        <h3>1000+</h3>
+                        <p>Restaurants</p>
+                    </div>
+                    <div class="stat-item">
+                        <h3>500+</h3>
+                        <p>Menu Items</p>
+                    </div>
+                    <div class="stat-item">
+                        <h3>10K+</h3>
+                        <p>Happy Customers</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="hero-image" data-aos="fade-left" data-aos-duration="1000" data-aos-delay="200">
+                <div class="hero-img-wrapper">
+                    <img src="https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=600" alt="Delicious Burger" class="main-hero-img">
+                    <div class="hero-img-glow"></div>
+                </div>
+
+                <!-- Floating Cards -->
+                <div class="floating-card card-delivery">
+                    <div class="card-icon green">
+                        <i class='bx bxs-truck'></i>
+                    </div>
+                    <div>
+                        <h4>Fast Delivery</h4>
+                        <p>30 min delivery</p>
+                    </div>
+                </div>
+
+                <div class="floating-card card-rating">
+                    <div class="card-icon yellow">
+                        <i class='bx bxs-star'></i>
+                    </div>
+                    <div>
+                        <h4>4.8 Rating</h4>
+                        <p>2K+ Reviews</p>
+                    </div>
+                </div>
+
+                <div class="floating-card card-discount">
+                    <span class="discount-badge">50% OFF</span>
+                    <p>On your first order!</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="hero-wave">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 120">
+                <path fill="#f8f9fa" d="M0,64L48,69.3C96,75,192,85,288,80C384,75,480,53,576,48C672,43,768,53,864,64C960,75,1056,85,1152,80C1248,75,1344,53,1392,42.7L1440,32L1440,120L1392,120C1344,120,1248,120,1152,120C1056,120,960,120,864,120C768,120,672,120,576,120C480,120,384,120,288,120C192,120,96,120,48,120L0,120Z"></path>
+            </svg>
+        </div>
+    </section>
+
+    <!-- ============ FEATURES ============ -->
+    <section class="features">
+        <div class="container">
+            <div class="features-grid">
+                <div class="feature-card" data-aos="fade-up" data-aos-delay="0">
+                    <div class="feature-icon orange-bg">
+                        <i class='bx bx-cycling'></i>
+                    </div>
+                    <h3>Fast Delivery</h3>
+                    <p>Promise to deliver within 30 mins</p>
+                </div>
+                <div class="feature-card" data-aos="fade-up" data-aos-delay="100">
+                    <div class="feature-icon green-bg">
+                        <i class='bx bx-leaf'></i>
+                    </div>
+                    <h3>Fresh Food</h3>
+                    <p>100% fresh & hygienic food</p>
+                </div>
+                <div class="feature-card" data-aos="fade-up" data-aos-delay="200">
+                    <div class="feature-icon purple-bg">
+                        <i class='bx bx-shield-quarter'></i>
+                    </div>
+                    <h3>Safe Packaging</h3>
+                    <p>Tamper-proof sealed packaging</p>
+                </div>
+                <div class="feature-card" data-aos="fade-up" data-aos-delay="300">
+                    <div class="feature-icon red-bg">
+                        <i class='bx bx-gift'></i>
+                    </div>
+                    <h3>Free Rewards</h3>
+                    <p>Earn rewards on every order</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ============ CATEGORIES (dynamic) ============ -->
+    <section class="categories" id="categories">
+        <div class="container">
+            <div class="section-header" data-aos="fade-up">
+                <span class="section-tag">🔥 What's on your mind?</span>
+                <h2>Explore <span class="gradient-text">Categories</span></h2>
+                <p>Choose from our wide range of cuisines</p>
+            </div>
+
+            <div class="categories-slider" data-aos="fade-up" data-aos-delay="200">
+                {% for category in categories %}
+                <div class="category-card">
+                    <div class="cat-img-wrapper">
+                        {% if category.image %}
+                        <img src="{{ category.image.url }}" alt="{{ category.name }} food category" loading="lazy" decoding="async">
+                        {% else %}
+                        <div class="img-placeholder">🍽️</div>
+                        {% endif %}
+                    </div>
+                    <h4>{{ category.name }}</h4>
+                    <span>{{ category.dishes.count }} Options</span>
+                </div>
+                {% empty %}
+                <div class="empty-state">
+                    <i class='bx bx-food-menu'></i>
+                    <h3>No categories yet</h3>
+                    <p>Check back soon — we're adding fresh cuisines!</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </section>
+
+    <!-- ============ POPULAR DISHES (dynamic, paginated) ============ -->
+    <section class="popular" id="popular">
+        <div class="container">
+            <div class="section-header" data-aos="fade-up">
+                <span class="section-tag">⭐ Customer Favorites</span>
+                <h2>Popular <span class="gradient-text">Dishes</span></h2>
+                <p>Most ordered items this week</p>
+            </div>
+
+            <div class="filter-tabs" data-aos="fade-up" data-aos-delay="100">
+                <button class="filter-btn active" data-filter="all">All</button>
+                {% for category in categories %}
+                <button class="filter-btn" data-filter="{{ category.slug }}">{{ category.name }}</button>
+                {% endfor %}
+            </div>
+
+            <div class="dishes-grid">
+                {% for dish in page_obj %}
+                    {% cycle '0' '100' '200' '300' '100' '200' as dish_delay silent %}
+                    {% include 'core/includes/dish_card.html' with dish=dish delay=dish_delay %}
+                {% empty %}
+                <div class="empty-state">
+                    <i class='bx bx-dish'></i>
+                    <h3>No dishes available right now</h3>
+                    <p>Our chefs are preparing something special. Check back soon!</p>
+                </div>
+                {% endfor %}
+            </div>
+
+            {% include 'core/includes/pagination.html' %}
+        </div>
+    </section>
+
+    <!-- ============ OFFER BANNER (dynamic) ============ -->
+    <section class="offer-banner" id="offers">
+        <div class="container">
+            <div class="offer-grid">
+                {% for offer in offers %}
+                <div class="offer-card {% cycle 'offer-card-1' 'offer-card-2' %}" data-aos="{% cycle 'fade-right' 'fade-left' %}">
+                    <div class="offer-content">
+                        <span class="offer-tag">{% cycle 'Limited Time' 'Special Offer' %}</span>
+                        <h2>{{ offer.coupon.title }}</h2>
+                        <p>{{ offer.coupon.description|truncatechars:60 }}</p>
+                        <div class="coupon-code">
+                            <span>{{ offer.coupon.code }}</span>
+                            <button onclick="copyCode('{{ offer.coupon.code }}')"><i class='bx bx-copy'></i></button>
+                        </div>
+                        <button class="btn btn-white">Order Now</button>
+                    </div>
+                    <div class="offer-img">
+                        {% if offer.image %}
+                        <img src="{{ offer.image.url }}" alt="Offer food promotion" loading="lazy" decoding="async">
+                        {% else %}
+                        <div class="img-placeholder">🎁</div>
+                        {% endif %}
+                    </div>
+                </div>
+                {% empty %}
+                <div class="empty-state">
+                    <i class='bx bx-gift'></i>
+                    <h3>No active offers right now</h3>
+                    <p>Subscribe to our newsletter to be first to know about new deals!</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </section>
+
+    <!-- ============ RESTAURANTS (dynamic) ============ -->
+    <section class="restaurants" id="restaurants">
+        <div class="container">
+            <div class="section-header" data-aos="fade-up">
+                <span class="section-tag">🏪 Top Picks</span>
+                <h2>Popular <span class="gradient-text">Restaurants</span></h2>
+                <p>Best rated restaurants near you</p>
+            </div>
+
+            <div class="restaurants-grid">
+                {% for restaurant in restaurants %}
+                    {% cycle '0' '100' '200' '300' as rest_delay silent %}
+                    {% include 'core/includes/restaurant_card.html' with restaurant=restaurant delay=rest_delay %}
+                {% empty %}
+                <div class="empty-state">
+                    <i class='bx bx-store-alt'></i>
+                    <h3>No restaurants yet</h3>
+                    <p>We're onboarding the best kitchens in your city — stay tuned!</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </section>
+
+    <!-- ============ HOW IT WORKS ============ -->
+    <section class="how-it-works">
+        <div class="container">
+            <div class="section-header" data-aos="fade-up">
+                <span class="section-tag">📱 Simple Process</span>
+                <h2>How it <span class="gradient-text">Works?</span></h2>
+            </div>
+
+            <div class="steps-grid">
+                <div class="step-card" data-aos="fade-up" data-aos-delay="0">
+                    <div class="step-number">01</div>
+                    <div class="step-icon">
+                        <i class='bx bx-map'></i>
+                    </div>
+                    <h3>Choose Location</h3>
+                    <p>Enter your delivery address to find restaurants near you</p>
+                </div>
+                <div class="step-connector" data-aos="fade-up" data-aos-delay="50">
+                    <div class="connector-line"></div>
+                    <i class='bx bx-right-arrow-alt'></i>
+                </div>
+                <div class="step-card" data-aos="fade-up" data-aos-delay="100">
+                    <div class="step-number">02</div>
+                    <div class="step-icon">
+                        <i class='bx bx-food-menu'></i>
+                    </div>
+                    <h3>Choose Food</h3>
+                    <p>Browse menus and select your favorite dishes</p>
+                </div>
+                <div class="step-connector" data-aos="fade-up" data-aos-delay="150">
+                    <div class="connector-line"></div>
+                    <i class='bx bx-right-arrow-alt'></i>
+                </div>
+                <div class="step-card" data-aos="fade-up" data-aos-delay="200">
+                    <div class="step-number">03</div>
+                    <div class="step-icon">
+                        <i class='bx bx-credit-card'></i>
+                    </div>
+                    <h3>Make Payment</h3>
+                    <p>Pay securely via UPI, cards, or cash on delivery</p>
+                </div>
+                <div class="step-connector" data-aos="fade-up" data-aos-delay="250">
+                    <div class="connector-line"></div>
+                    <i class='bx bx-right-arrow-alt'></i>
+                </div>
+                <div class="step-card" data-aos="fade-up" data-aos-delay="300">
+                    <div class="step-number">04</div>
+                    <div class="step-icon">
+                        <i class='bx bx-dish'></i>
+                    </div>
+                    <h3>Enjoy Food</h3>
+                    <p>Sit back, relax and enjoy your delicious meal!</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ============ TESTIMONIALS ============ -->
+    <section class="testimonials">
+        <div class="container">
+            <div class="section-header" data-aos="fade-up">
+                <span class="section-tag">💬 What people say</span>
+                <h2>Customer <span class="gradient-text">Reviews</span></h2>
+            </div>
+
+            <div class="testimonials-grid">
+                <div class="testimonial-card" data-aos="fade-up" data-aos-delay="0">
+                    <div class="stars">
+                        <i class='bx bxs-star'></i><i class='bx bxs-star'></i><i class='bx bxs-star'></i><i class='bx bxs-star'></i><i class='bx bxs-star'></i>
+                    </div>
+                    <p>"Amazing food delivery service! The food arrived hot and fresh within 20 minutes. Highly recommend!"</p>
+                    <div class="testimonial-author">
+                        <img src="https://randomuser.me/api/portraits/women/44.jpg" alt="Customer review by Priya" loading="lazy">
+                        <div>
+                            <h4>Priya Sharma</h4>
+                            <span>Regular Customer</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="testimonial-card featured" data-aos="fade-up" data-aos-delay="100">
+                    <div class="stars">
+                        <i class='bx bxs-star'></i><i class='bx bxs-star'></i><i class='bx bxs-star'></i><i class='bx bxs-star'></i><i class='bx bxs-star'></i>
+                    </div>
+                    <p>"Best food delivery app I've ever used! Great variety of restaurants, affordable prices, and super fast delivery. 10/10!"</p>
+                    <div class="testimonial-author">
+                        <img src="https://randomuser.me/api/portraits/men/32.jpg" alt="Customer review by Rahul" loading="lazy">
+                        <div>
+                            <h4>Rahul Kumar</h4>
+                            <span>Food Blogger</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="testimonial-card" data-aos="fade-up" data-aos-delay="200">
+                    <div class="stars">
+                        <i class='bx bxs-star'></i><i class='bx bxs-star'></i><i class='bx bxs-star'></i><i class='bx bxs-star'></i><i class='bx bxs-star-half'></i>
+                    </div>
+                    <p>"Love the offers and discounts! The app is so easy to use. Customer support is also very responsive."</p>
+                    <div class="testimonial-author">
+                        <img src="https://randomuser.me/api/portraits/women/68.jpg" alt="Customer review by Anita" loading="lazy">
+                        <div>
+                            <h4>Anita Patel</h4>
+                            <span>Verified User</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ============ DOWNLOAD APP ============ -->
+    <section class="download-app" id="download">
+        <div class="container">
+            <div class="download-grid">
+                <div class="download-content" data-aos="fade-right">
+                    <span class="section-tag">📲 Get the App</span>
+                    <h2>Get Started With <span class="gradient-text">QuickBite</span> Today!</h2>
+                    <p>Download the app and enjoy exclusive offers, easy ordering, and real-time tracking.</p>
+                    <div class="app-features">
+                        <div class="app-feature">
+                            <i class='bx bx-check-circle'></i>
+                            <span>Exclusive app-only deals</span>
+                        </div>
+                        <div class="app-feature">
+                            <i class='bx bx-check-circle'></i>
+                            <span>Real-time order tracking</span>
+                        </div>
+                        <div class="app-feature">
+                            <i class='bx bx-check-circle'></i>
+                            <span>Easy payment options</span>
+                        </div>
+                        <div class="app-feature">
+                            <i class='bx bx-check-circle'></i>
+                            <span>24/7 customer support</span>
+                        </div>
+                    </div>
+                    <div class="download-buttons">
+                        <a href="#" class="store-btn">
+                            <i class='bx bxl-apple'></i>
+                            <div>
+                                <small>Download on</small>
+                                <strong>App Store</strong>
+                            </div>
+                        </a>
+                        <a href="#" class="store-btn">
+                            <i class='bx bxl-play-store'></i>
+                            <div>
+                                <small>Get it on</small>
+                                <strong>Google Play</strong>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+                <div class="download-image" data-aos="fade-left">
+                    <div class="phone-mockup">
+                        <img src="https://images.unsplash.com/photo-1512149177596-f817c7ef5d4c?w=300" alt="QuickBite mobile app screenshot" loading="lazy">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ============ NEWSLETTER ============ -->
+    <section class="newsletter">
+        <div class="container">
+            <div class="newsletter-card" data-aos="zoom-in">
+                <h2>Stay Updated!</h2>
+                <p>Subscribe to get exclusive offers and food updates</p>
+                <div class="newsletter-form">
+                    <input type="email" placeholder="Enter your email address">
+                    <button class="btn btn-primary">Subscribe</button>
+                </div>
+            </div>
+        </div>
+    </section>
+{% endblock %}
+
+{% block meta_description %}QuickBite — order pizza, biryani, burgers, sushi and more from the best restaurants near you. Live order tracking, honest ETAs, cash on delivery.{% endblock %}
+{% block meta_keywords %}food delivery, order food online, restaurant near me, pizza delivery, biryani delivery, QuickBite{% endblock %}
+{% block og_title %}QuickBite — Food Delivery Made Easy 🍔{% endblock %}
+{% block og_description %}Order from the best restaurants near you. Live tracking, honest ETAs, cash on delivery.{% endblock %}
+{% block structured_data %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  "name": "QuickBite",
+  "url": "{{ site_url }}",
+  "description": "Food delivery platform connecting customers with local restaurants.",
+  "contactPoint": {
+    "@type": "ContactPoint",
+    "telephone": "+91-98765-43210",
+    "contactType": "customer service",
+    "availableLanguage": ["English", "Hindi", "Gujarati"]
+  }
+}
+</script>
+{% endblock %}

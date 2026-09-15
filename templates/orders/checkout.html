@@ -1,0 +1,280 @@
+{% extends 'base.html' %}
+
+{% block title %}Checkout | QuickBite{% endblock %}
+
+{% block content %}
+    <div class="qb-page">
+        <div class="container">
+
+            <nav class="qb-breadcrumb" aria-label="Breadcrumb">
+                <a href="{% url 'core:home' %}"><i class='bx bx-home'></i> Home</a>
+                <i class='bx bx-chevron-right'></i>
+                <a href="{% url 'cart:cart_page' %}">Cart</a>
+                <i class='bx bx-chevron-right'></i>
+                <span class="current">Checkout</span>
+            </nav>
+
+            <div class="section-header" data-aos="fade-up" style="text-align:left;align-items:flex-start;">
+                <span class="section-tag">🧾 Almost there</span>
+                <h2>Check<span class="gradient-text">out</span></h2>
+            </div>
+
+            {% if not lines %}
+            <div class="empty-state qb-empty-cart" data-aos="fade-up">
+                <div class="qb-empty-emoji">🛒</div>
+                <h3>Nothing to check out</h3>
+                <p>Your cart is empty — add a few dishes first.</p>
+                <a href="{% url 'core:menu' %}" class="btn btn-primary" style="margin-top:16px;">
+                    Browse Menu <i class='bx bxs-right-arrow-alt'></i>
+                </a>
+            </div>
+            {% else %}
+
+            <!-- progress bar -->
+            <div class="qb-steps-bar" data-aos="fade-up">
+                <div class="qb-step-pill active"><span>1</span> Delivery Address</div>
+                <div class="qb-step-line"></div>
+                <div class="qb-step-pill active"><span>2</span> Payment</div>
+                <div class="qb-step-line"></div>
+                <div class="qb-step-pill active"><span>3</span> Review & Place</div>
+            </div>
+
+            <div class="qb-checkout-layout">
+                <main>
+                    <form method="post" id="checkoutForm">
+                        {% csrf_token %}
+
+                        <!-- ================= STEP 1: ADDRESS ================= -->
+                        <section class="qb-step-card" data-aos="fade-up">
+                            <div class="qb-step-head">
+                                <h3><span class="qb-step-num">1</span> Delivery Address</h3>
+                                <button type="button" class="qb-link-btn" data-toggle="#addAddressBox">
+                                    <i class='bx bx-plus'></i> Add new address
+                                </button>
+                            </div>
+
+                            {% if not addresses %}
+                            <p class="qb-hint">No saved addresses yet — add your first delivery address to continue. 👇</p>
+                            {% endif %}
+
+                            <div class="qb-address-list">
+                                {% for address in addresses %}
+                                <div class="qb-address-card {% if address.pk == selected_address_id %}selected{% endif %}">
+                                    <label class="qb-address-label">
+                                        <input type="radio" name="address_id" value="{{ address.pk }}"
+                                               form="checkoutForm" required
+                                               {% if address.pk == selected_address_id %}checked{% endif %}>
+                                        <span class="qb-radio-dot"></span>
+                                        <span class="qb-address-body">
+                                            <span class="qb-address-card-head">
+                                                <span class="qb-address-type">{{ address.get_address_type_display }}</span>
+                                                {% if address.is_default %}<span class="qb-default-chip">Default</span>{% endif %}
+                                            </span>
+                                            <strong>{{ address.full_name }}</strong>
+                                            <small style="color:#888;">{{ address.phone }}</small>
+                                            <span class="qb-address-text">{{ address.single_line }}</span>
+                                        </span>
+                                    </label>
+                                    <div class="qb-address-actions">
+                                        <button type="button" class="qb-mini-btn" data-toggle="#editAddressBox-{{ address.pk }}" title="Edit">
+                                            <i class='bx bx-edit'></i>
+                                        </button>
+                                        {% if not address.is_default %}
+                                        <button type="submit" class="qb-mini-btn" form="setDefaultForm-{{ address.pk }}" title="Set as default">
+                                            <i class='bx bx-star'></i>
+                                        </button>
+                                        {% endif %}
+                                        <button type="submit" class="qb-mini-btn danger" form="deleteAddressForm-{{ address.pk }}" title="Delete">
+                                            <i class='bx bx-trash'></i>
+                                        </button>
+                                    </div>
+
+                                    <!-- edit form (inputs belong to the standalone form below) -->
+                                    <div class="qb-address-formbox" id="editAddressBox-{{ address.pk }}">
+                                        <div class="qb-form-row">
+                                            <div class="qb-form-group"><label>Full name</label><input class="qb-input" name="full_name" form="editAddressForm-{{ address.pk }}" value="{{ address.full_name }}" required></div>
+                                            <div class="qb-form-group"><label>Phone</label><input class="qb-input" name="phone" form="editAddressForm-{{ address.pk }}" value="{{ address.phone }}" required></div>
+                                        </div>
+                                        <div class="qb-form-group"><label>Address line 1</label><input class="qb-input" name="address_line1" form="editAddressForm-{{ address.pk }}" value="{{ address.address_line1 }}" required></div>
+                                        <div class="qb-form-group"><label>Address line 2</label><input class="qb-input" name="address_line2" form="editAddressForm-{{ address.pk }}" value="{{ address.address_line2 }}"></div>
+                                        <div class="qb-form-row">
+                                            <div class="qb-form-group"><label>Landmark</label><input class="qb-input" name="landmark" form="editAddressForm-{{ address.pk }}" value="{{ address.landmark }}"></div>
+                                            <div class="qb-form-group"><label>City</label><input class="qb-input" name="city" form="editAddressForm-{{ address.pk }}" value="{{ address.city }}" required></div>
+                                        </div>
+                                        <div class="qb-form-row">
+                                            <div class="qb-form-group"><label>State</label><input class="qb-input" name="state" form="editAddressForm-{{ address.pk }}" value="{{ address.state }}" required></div>
+                                            <div class="qb-form-group"><label>PIN code</label><input class="qb-input" name="pincode" form="editAddressForm-{{ address.pk }}" value="{{ address.pincode }}" required></div>
+                                        </div>
+                                        <div class="qb-form-row">
+                                            <div class="qb-form-group"><label>Type</label>
+                                                <select class="qb-input qb-select" name="address_type" form="editAddressForm-{{ address.pk }}">
+                                                    <option value="home" {% if address.address_type == 'home' %}selected{% endif %}>🏠 Home</option>
+                                                    <option value="work" {% if address.address_type == 'work' %}selected{% endif %}>🏢 Work</option>
+                                                    <option value="other" {% if address.address_type == 'other' %}selected{% endif %}>📍 Other</option>
+                                                </select>
+                                            </div>
+                                            <div class="qb-form-group"><label>&nbsp;</label>
+                                                <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:#555;">
+                                                    <input type="checkbox" name="is_default" form="editAddressForm-{{ address.pk }}" {% if address.is_default %}checked{% endif %} style="accent-color:#FF5722;"> Make default
+                                                </label>
+                                            </div>
+                                        </div>
+                                        <div style="display:flex;gap:10px;">
+                                            <button type="submit" class="btn btn-primary" form="editAddressForm-{{ address.pk }}"><i class='bx bx-save'></i> Save address</button>
+                                            <button type="button" class="qb-mini-btn" data-toggle="#editAddressBox-{{ address.pk }}">Cancel</button>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+
+                            <!-- ADD ADDRESS form box -->
+                            <div class="qb-address-formbox {% if not addresses %}open{% endif %}" id="addAddressBox">
+                                <h4 style="margin-bottom:14px;color:#212121;">Add a new address</h4>
+                                <div class="qb-form-row">
+                                    <div class="qb-form-group"><label>Full name</label>{{ form.full_name }}</div>
+                                    <div class="qb-form-group"><label>Phone</label>{{ form.phone }}</div>
+                                </div>
+                                <div class="qb-form-group"><label>Address line 1</label>{{ form.address_line1 }}</div>
+                                <div class="qb-form-group"><label>Address line 2</label>{{ form.address_line2 }}</div>
+                                <div class="qb-form-row">
+                                    <div class="qb-form-group"><label>Landmark</label>{{ form.landmark }}</div>
+                                    <div class="qb-form-group"><label>City</label>{{ form.city }}</div>
+                                </div>
+                                <div class="qb-form-row">
+                                    <div class="qb-form-group"><label>State</label>{{ form.state }}</div>
+                                    <div class="qb-form-group"><label>PIN code</label>{{ form.pincode }}</div>
+                                </div>
+                                <div class="qb-form-row">
+                                    <div class="qb-form-group"><label>Type</label>{{ form.address_type }}</div>
+                                    <div class="qb-form-group"><label>&nbsp;</label>
+                                        <label style="display:flex;align-items:center;gap:8px;font-size:13px;color:#555;">
+                                            {{ form.is_default }} Make default
+                                        </label>
+                                    </div>
+                                </div>
+                                <button type="submit" class="btn btn-primary" form="addressAddForm">
+                                    <i class='bx bx-save'></i> Save address
+                                </button>
+                            </div>
+                        </section>
+
+                        <!-- ================= STEP 2: PAYMENT ================= -->
+                        <section class="qb-step-card" data-aos="fade-up">
+                            <div class="qb-step-head">
+                                <h3><span class="qb-step-num">2</span> Payment Method</h3>
+                            </div>
+                            <div class="qb-pay-list">
+                                <label class="qb-pay-card selected">
+                                    <input type="radio" name="payment_method" value="cod" checked>
+                                    <span class="qb-radio-dot"></span>
+                                    <span class="qb-pay-body">
+                                        <strong><i class='bx bx-money'></i> Cash on Delivery</strong>
+                                        <small>Pay in cash when your food arrives</small>
+                                    </span>
+                                </label>
+                                <label class="qb-pay-card disabled">
+                                    <input type="radio" name="payment_method" value="upi" disabled>
+                                    <span class="qb-radio-dot"></span>
+                                    <span class="qb-pay-body">
+                                        <strong><i class='bx bx-mobile-alt'></i> UPI</strong>
+                                        <small>Google Pay, PhonePe, Paytm</small>
+                                    </span>
+                                    <span class="qb-soon-chip">Coming Soon</span>
+                                </label>
+                                <label class="qb-pay-card disabled">
+                                    <input type="radio" name="payment_method" value="card" disabled>
+                                    <span class="qb-radio-dot"></span>
+                                    <span class="qb-pay-body">
+                                        <strong><i class='bx bx-credit-card'></i> Credit / Debit Card</strong>
+                                        <small>Visa, Mastercard, RuPay</small>
+                                    </span>
+                                    <span class="qb-soon-chip">Coming Soon</span>
+                                </label>
+                                <label class="qb-pay-card disabled">
+                                    <input type="radio" name="payment_method" value="wallet" disabled>
+                                    <span class="qb-radio-dot"></span>
+                                    <span class="qb-pay-body">
+                                        <strong><i class='bx bx-wallet-alt'></i> Wallet</strong>
+                                        <small>QuickBite balance & partner wallets</small>
+                                    </span>
+                                    <span class="qb-soon-chip">Coming Soon</span>
+                                </label>
+                            </div>
+                        </section>
+
+                        <!-- ================= STEP 3: NOTES ================= -->
+                        <section class="qb-step-card" data-aos="fade-up">
+                            <div class="qb-step-head">
+                                <h3><span class="qb-step-num">3</span> Review & Place Order</h3>
+                            </div>
+                            <div class="qb-form-group">
+                                <label for="instructions">Special instructions (optional)</label>
+                                <textarea class="qb-input" id="instructions" name="instructions" rows="3"
+                                          maxlength="500" form="checkoutForm"
+                                          placeholder="e.g. Extra spicy, no onions, ring the doorbell twice..."></textarea>
+                            </div>
+                        </section>
+                    </form>
+                </main>
+
+                <!-- ============ RIGHT RAIL: items + summary ============ -->
+                <aside class="qb-summary-wrap">
+                    <div class="qb-checkout-items" data-aos="fade-left">
+                        <h4><i class='bx bx-cart'></i> Your items ({{ totals.count }})</h4>
+                        {% for line in lines %}
+                        <div class="qb-checkout-item">
+                            {% if line.dish.image %}
+                            <img src="{{ line.dish.image.url }}" alt="{{ line.dish.name }}" loading="lazy" decoding="async">
+                            {% else %}
+                            <div class="img-placeholder" style="font-size:20px;">🍽️</div>
+                            {% endif %}
+                            <div>
+                                <strong>{{ line.dish.name }}</strong>
+                                <small>× {{ line.quantity }}</small>
+                            </div>
+                            <span>₹{{ line.sub_total|floatformat:"2" }}</span>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% include 'cart/includes/summary.html' %}
+                </aside>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Standalone forms referenced via the HTML5 form= attribute (no nesting) -->
+    <form method="post" action="{% url 'orders:address_add' %}" id="addressAddForm">
+        {% csrf_token %}<input type="hidden" name="next" value="/checkout/">
+    </form>
+    {% for address in addresses %}
+    <form method="post" action="{% url 'orders:address_edit' address.pk %}" id="editAddressForm-{{ address.pk }}">
+        {% csrf_token %}<input type="hidden" name="next" value="/checkout/?select={{ address.pk }}">
+    </form>
+    <form method="post" action="{% url 'orders:address_delete' address.pk %}" id="deleteAddressForm-{{ address.pk }}">
+        {% csrf_token %}<input type="hidden" name="next" value="/checkout/">
+    </form>
+    <form method="post" action="{% url 'orders:address_set_default' address.pk %}" id="setDefaultForm-{{ address.pk }}">
+        {% csrf_token %}<input type="hidden" name="next" value="/checkout/?select={{ address.pk }}">
+    </form>
+    {% endfor %}
+{% endblock %}
+
+{% block extra_js %}
+    <script>
+        // Toggle address add/edit boxes + reflect radio/card selection
+        document.querySelectorAll('[data-toggle]').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                const box = document.querySelector(btn.dataset.toggle);
+                if (box) box.classList.toggle('open');
+            });
+        });
+        document.querySelectorAll('.qb-address-card input[type="radio"]').forEach(function (radio) {
+            radio.addEventListener('change', function () {
+                document.querySelectorAll('.qb-address-card').forEach(c => c.classList.remove('selected'));
+                radio.closest('.qb-address-card').classList.add('selected');
+            });
+        });
+    </script>
+{% endblock %}

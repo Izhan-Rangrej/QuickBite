@@ -1,0 +1,70 @@
+{% extends 'dashboard/base.html' %}
+
+{% block title %}Users{% endblock %}
+{% block page_title %}Users{% endblock %}
+
+{% block admin_content %}
+    <form method="get" class="qb-admin-toolbar">
+        <input type="text" name="q" value="{{ q }}" placeholder="Search username / email...">
+        <select name="role" onchange="this.form.submit()">
+            <option value="">All roles</option>
+            {% for value, label in role_choices %}
+            <option value="{{ value }}" {% if cur_role == value %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+        </select>
+        <button type="submit" class="qb-btn primary"><i class='bx bx-search'></i> Search</button>
+    </form>
+
+    <div class="qb-panel">
+        <div class="qb-table-wrap">
+            <table class="qb-table">
+                <thead>
+                <tr><th>User</th><th>Email</th><th>Role</th><th>Orders</th><th>Joined</th><th>Status</th><th>Update</th></tr>
+                </thead>
+                <tbody>
+                {% for u in page_obj %}
+                <tr>
+                    <td class="t-strong">{{ u.display_name }}<br><small style="color:#999;font-weight:400;">@{{ u.username }}</small></td>
+                    <td>{{ u.email|default:"—" }}</td>
+                    <td>
+                        {% if u.is_superuser %}<span class="qb-status-badge preparing">Superuser</span>
+                        {% else %}<span class="qb-status-badge {% if u.role == 'owner' %}out_for_delivery{% elif u.role == 'admin' %}confirmed{% else %}pending{% endif %}">{{ u.get_role_display }}</span>{% endif %}
+                    </td>
+                    <td>{{ u.order_count }}</td>
+                    <td>{{ u.date_joined|date:"d M Y" }}</td>
+                    <td>
+                        <span class="qb-status-badge {% if u.is_active %}delivered{% else %}cancelled{% endif %}">
+                            {% if u.is_active %}Active{% else %}Blocked{% endif %}</span>
+                    </td>
+                    <td>
+                        <form method="post" action="{% url 'dashboard:user_update' u.pk %}" style="display:flex;gap:6px;align-items:center;">
+                            {% csrf_token %}
+                            <select name="role" class="qb-status-select">
+                                {% for value, label in role_choices %}
+                                <option value="{{ value }}" {% if u.role == value %}selected{% endif %}>{{ label }}</option>
+                                {% endfor %}
+                            </select>
+                            <label style="font-size:11.5px;color:#888;display:flex;align-items:center;gap:4px;white-space:nowrap;">
+                                <input type="checkbox" name="is_active" {% if u.is_active %}checked{% endif %} style="accent-color:#FF5722;"> active
+                            </label>
+                            <button type="submit" class="qb-btn ghost sm"><i class='bx bx-check'></i></button>
+                        </form>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="7" style="color:#999;text-align:center;padding:30px;">No users found.</td></tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        {% if page_obj.paginator.num_pages > 1 %}
+        <div class="pagination" style="margin-top:18px;">
+            {% for num in page_obj.paginator.page_range %}
+            <a class="page-btn {% if num == page_obj.number %}active{% endif %}"
+               href="?q={{ q }}&role={{ cur_role }}&page={{ num }}">{{ num }}</a>
+            {% endfor %}
+        </div>
+        {% endif %}
+    </div>
+{% endblock %}

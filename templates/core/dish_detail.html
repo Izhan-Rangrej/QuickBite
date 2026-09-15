@@ -1,0 +1,224 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ dish.name }} | QuickBite{% endblock %}
+
+{% block meta_description %}{{ dish.description|default:dish.name|truncatechars:150 }} — order {{ dish.name }} from {{ dish.restaurant.name }} on QuickBite.{% endblock %}
+{% block meta_keywords %}{{ dish.name }}, {{ dish.category.name }}, {{ dish.restaurant.name }}, order online{% endblock %}
+{% block og_type %}product{% endblock %}
+{% block og_title %}{{ dish.name }} — ₹{{ dish.effective_price|floatformat:"0" }} | QuickBite{% endblock %}
+{% block og_description %}{{ dish.description|default:dish.name|truncatechars:150 }}{% endblock %}
+{% block og_image %}{% if dish.image %}{{ site_url }}{{ dish.image.url }}{% else %}{{ block.super }}{% endif %}{% endblock %}
+{% block structured_data %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "MenuItem",
+  "name": "{{ dish.name|escapejs }}",
+  "description": "{{ dish.description|default:dish.name|escapejs|truncatechars:200 }}",
+  "offers": {
+    "@type": "Offer",
+    "price": "{{ dish.effective_price|floatformat:'2' }}",
+    "priceCurrency": "INR",
+    "availability": "{% if dish.is_available %}https://schema.org/InStock{% else %}https://schema.org/OutOfStock{% endif %}"
+  }
+}
+</script>
+{% endblock %}
+
+{% block content %}
+    <div class="qb-page">
+        <div class="container">
+
+            <!-- Breadcrumb -->
+            <nav class="qb-breadcrumb" aria-label="Breadcrumb">
+                <a href="{% url 'core:home' %}"><i class='bx bx-home'></i> Home</a>
+                <i class='bx bx-chevron-right'></i>
+                <a href="{% url 'core:menu' %}">Menu</a>
+                <i class='bx bx-chevron-right'></i>
+                <a href="{% url 'core:menu' %}?category={{ dish.category.slug }}">{{ dish.category.name }}</a>
+                <i class='bx bx-chevron-right'></i>
+                <span class="current">{{ dish.name }}</span>
+            </nav>
+
+            <!-- ===== Dish detail ===== -->
+            <div class="qb-dish-detail">
+                <div class="qb-dish-img" data-aos="fade-right">
+                    {% if dish.image %}
+                    <img src="{{ dish.image.url }}" alt="{{ dish.name }}">
+                    {% else %}
+                    <div class="img-placeholder" style="min-height:380px;font-size:80px;">🍽️</div>
+                    {% endif %}
+                    <div class="qb-dish-badges">
+                        {% if dish.is_bestseller %}
+                        <span class="dish-badge bestseller" style="position:static;">Bestseller</span>
+                        {% elif dish.is_new %}
+                        <span class="dish-badge new" style="position:static;">New</span>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="qb-dish-info" data-aos="fade-left" data-aos-delay="100">
+                    <h1>{{ dish.name }}</h1>
+
+                    <div class="qb-dish-meta">
+                        <a class="qb-chip" href="{% url 'core:restaurant_detail' dish.restaurant.slug %}">
+                            <i class='bx bx-store-alt'></i> {{ dish.restaurant.name }}
+                        </a>
+                        <span class="qb-chip rating"><i class='bx bxs-star'></i> {{ dish.rating }}</span>
+                        {% if dish.is_veg %}
+                        <span class="qb-chip veg"><i class='bx bxs-circle'></i> Veg</span>
+                        {% else %}
+                        <span class="qb-chip nonveg"><i class='bx bxs-circle'></i> Non-Veg</span>
+                        {% endif %}
+                        <span class="qb-chip"><i class='bx bx-time-five'></i> {{ dish.preparation_time }} mins</span>
+                        <a class="qb-chip" href="{% url 'core:menu' %}?category={{ dish.category.slug }}">
+                            <i class='bx bx-category'></i> {{ dish.category.name }}
+                        </a>
+                    </div>
+
+                    {% if dish.description %}
+                    <p class="qb-dish-desc">{{ dish.description }}</p>
+                    {% endif %}
+
+                    <div class="qb-price-row">
+                        <span class="now">₹{{ dish.effective_price|floatformat:"-2" }}</span>
+                        {% if dish.discount_price %}
+                        <span class="was">₹{{ dish.price|floatformat:"-2" }}</span>
+                        <span class="off">{{ dish.discount_percent }}% OFF</span>
+                        {% endif %}
+                    </div>
+
+                    <!-- Quantity selector + big ADD (reuses card JS: toast + cart bounce) -->
+                    <div class="qb-buy-row">
+                        <div class="qb-qty">
+                            <button type="button" id="qtyMinus" aria-label="Decrease quantity">−</button>
+                            <input type="number" id="qtyInput" value="1" min="1" max="20" aria-label="Quantity">
+                            <button type="button" id="qtyPlus" aria-label="Increase quantity">+</button>
+                        </div>
+                        <button class="add-to-cart-btn qb-add-lg" data-dish-id="{{ dish.id }}">
+                            <i class='bx bx-cart-add'></i> Add to Cart
+                        </button>
+                    </div>
+
+                    <div class="qb-dish-extras">
+                        <span class="qb-chip"><i class='bx bxs-truck'></i> Free delivery</span>
+                        <span class="qb-chip"><i class='bx bx-shield-quarter'></i> Hygienically packed</span>
+                        <span class="qb-chip"><i class='bx bx-restaurant'></i> From {{ dish.restaurant.get_cuisine_type_display }} kitchen</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ===== Similar dishes ===== -->
+            {% if similar_dishes %}
+            <div style="margin-top:80px;">
+                <div class="section-header" data-aos="fade-up">
+                    <span class="section-tag">🍴 You may also like</span>
+                    <h2>Similar <span class="gradient-text">Dishes</span></h2>
+                </div>
+                <div class="dishes-grid">
+                    {% for similar in similar_dishes %}
+                        {% cycle '0' '100' '200' as sim_delay silent %}
+                        {% include 'core/includes/dish_card.html' with dish=similar delay=sim_delay %}
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- ===== Reviews (design only — functionality in a later phase) ===== -->
+            <div style="margin-top:80px;">
+                <div class="section-header" data-aos="fade-up">
+                    <span class="section-tag">💬 Ratings & Reviews</span>
+                    <h2>What foodies <span class="gradient-text">say</span></h2>
+                </div>
+                <div class="testimonials-grid">
+                    <div class="testimonial-card" data-aos="fade-up" data-aos-delay="0">
+                        <div class="stars">
+                            <i class='bx bxs-star'></i><i class='bx bxs-star'></i><i class='bx bxs-star'></i><i class='bx bxs-star'></i><i class='bx bxs-star'></i>
+                        </div>
+                        <p>"Absolutely delicious! Perfectly cooked and packed well. Will order again for sure."</p>
+                        <div class="testimonial-author">
+                            <img src="https://randomuser.me/api/portraits/women/44.jpg" alt="Customer review by Priya" loading="lazy">
+                            <div>
+                                <h4>Priya Sharma</h4>
+                                <span>Ordered last week</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="testimonial-card featured" data-aos="fade-up" data-aos-delay="100">
+                        <div class="stars">
+                            <i class='bx bxs-star'></i><i class='bx bxs-star'></i><i class='bx bxs-star'></i><i class='bx bxs-star'></i><i class='bx bxs-star-half'></i>
+                        </div>
+                        <p>"Great portion size and arrived piping hot. The flavours were spot on — highly recommended!"</p>
+                        <div class="testimonial-author">
+                            <img src="https://randomuser.me/api/portraits/men/32.jpg" alt="Customer review by Rahul" loading="lazy">
+                            <div>
+                                <h4>Rahul Kumar</h4>
+                                <span>Ordered 2 days ago</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="testimonial-card" data-aos="fade-up" data-aos-delay="200">
+                        <div class="stars">
+                            <i class='bx bxs-star'></i><i class='bx bxs-star'></i><i class='bx bxs-star'></i><i class='bx bxs-star'></i><i class='bx bxs-star'></i>
+                        </div>
+                        <p>"Value for money! Fresh ingredients and quick delivery. My whole family loved it."</p>
+                        <div class="testimonial-author">
+                            <img src="https://randomuser.me/api/portraits/women/68.jpg" alt="User">
+                            <div>
+                                <h4>Anita Patel</h4>
+                                <span>Ordered last month</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <p class="qb-reviews-note">⭐ Reviews below come from real, delivered QuickBite orders.</p>
+
+                <!-- ===== Real reviews (Phase 9) ===== -->
+                <div class="qb-reviews-block" data-aos="fade-up">
+                    {% if user.is_authenticated %}
+                        {% if user_review %}
+                        <div class="qb-review-yours">
+                            <i class='bx bx-check-circle'></i> You rated this dish
+                            {% include 'reviews/includes/stars.html' with value=user_review.rating %}
+                            {% if user_review.comment %}— “{{ user_review.comment }}”{% endif %}
+                        </div>
+                        {% elif can_review %}
+                        <h4 style="color:#212121;margin-bottom:12px;">Rate this dish</h4>
+                        {% include 'reviews/includes/review_form.html' with target_type='dish' target_id=dish.pk next=request.path order_id=review_order_id %}
+                        {% else %}
+                        <p class="qb-hint"><i class='bx bx-info-circle'></i> Order and enjoy this dish to leave a verified review.</p>
+                        {% endif %}
+                    {% else %}
+                    <p class="qb-hint"><a href="{% url 'accounts:login' %}?next={{ request.path }}" style="color:#FF5722;font-weight:600;">Log in</a> to review this dish.</p>
+                    {% endif %}
+
+                    {% include 'reviews/includes/review_list.html' %}
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block extra_js %}
+    <script src="{% static_min 'js/reviews.js' %}"></script>
+    <script>
+        // Quantity selector (dish detail page)
+        (function () {
+            const input = document.getElementById('qtyInput');
+            if (!input) return;
+            const clamp = () => {
+                let v = parseInt(input.value, 10);
+                if (isNaN(v) || v < 1) v = 1;
+                if (v > 20) v = 20;
+                input.value = v;
+            };
+            document.getElementById('qtyMinus').addEventListener('click', () => {
+                input.value = Math.max(1, (parseInt(input.value, 10) || 1) - 1);
+            });
+            document.getElementById('qtyPlus').addEventListener('click', () => {
+                input.value = Math.min(20, (parseInt(input.value, 10) || 1) + 1);
+            });
+            input.addEventListener('change', clamp);
+        })();
+    </script>
+{% endblock %}

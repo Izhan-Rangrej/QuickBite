@@ -1,0 +1,193 @@
+{% extends 'base.html' %}
+
+{% block title %}Order {{ order.order_id }} | QuickBite{% endblock %}
+
+{% block content %}
+    <div class="qb-page">
+        <div class="container">
+
+            <nav class="qb-breadcrumb" aria-label="Breadcrumb">
+                <a href="{% url 'core:home' %}"><i class='bx bx-home'></i> Home</a>
+                <i class='bx bx-chevron-right'></i>
+                <a href="{% url 'orders:my_orders' %}">My Orders</a>
+                <i class='bx bx-chevron-right'></i>
+                <span class="current">{{ order.order_id }}</span>
+            </nav>
+
+            <div class="qb-detail-head" data-aos="fade-up">
+                <div>
+                    <h2>Order <span class="gradient-text">{{ order.order_id }}</span></h2>
+                    <p class="qb-detail-meta">
+                        <i class='bx bx-time-five'></i> Placed {{ order.created_at|date:"d M Y, g:i A" }}
+                        · <span class="qb-status-badge {{ order.status }}">{{ order.get_status_display }}</span>
+                    </p>
+                </div>
+                <div class="qb-detail-head-actions">
+                    <a href="{% url 'orders:order_invoice' order.order_id %}" class="btn btn-outline btn-sm">
+                        <i class='bx bx-download'></i> Invoice
+                    </a>
+                    <form method="post" action="{% url 'orders:order_reorder' order.order_id %}" style="display:inline;">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-primary btn-sm"><i class='bx bx-refresh'></i> Reorder</button>
+                    </form>
+                </div>
+            </div>
+
+            {% if order.status == 'cancelled' %}
+            <div class="qb-cancel-banner" data-aos="fade-up">
+                <i class='bx bx-error-circle'></i> This order was cancelled on {{ order.updated_at|date:"d M, g:i A" }}.
+                Any amount paid will be refunded to the original payment method.
+            </div>
+            {% endif %}
+
+            <div class="qb-detail-layout">
+                <main>
+                    <!-- ============ TRACKING TIMELINE ============ -->
+                    {% if order.status != 'cancelled' %}
+                    <section class="qb-detail-card" data-aos="fade-up">
+                        <h3><i class='bx bx-current-location'></i> Order Tracking</h3>
+                        {% if order.status != 'delivered' %}
+                        <p class="qb-hint"><i class='bx bx-time-five'></i> Estimated delivery in ~{{ order.eta_minutes }} minutes</p>
+                        {% endif %}
+                        <div class="qb-timeline">
+                            {% for status, label, state in order.timeline_steps %}
+                            <div class="qb-timeline-step {{ state }}">
+                                <div class="qb-timeline-dot">
+                                    {% if state == 'done' %}<i class='bx bx-check'></i>{% endif %}
+                                </div>
+                                <div class="qb-timeline-body">
+                                    <strong>{{ label }}</strong>
+                                    {% if status == 'delivered' and order.delivered_at %}
+                                    <small>Delivered {{ order.delivered_at|date:"d M, g:i A" }}</small>
+                                    {% elif status == 'pending' %}
+                                    <small>{{ order.created_at|date:"d M, g:i A" }}</small>
+                                    {% elif state == 'current' %}
+                                    <small>Right now</small>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% if order.status == 'delivered' %}
+                        <div class="qb-rate-row">
+                            <span>Enjoyed your meal? 🌟 Rate your dishes below.</span>
+                        </div>
+                        {% endif %}
+                    </section>
+                    {% endif %}
+
+                    <!-- ============ RATE DELIVERED DISHES (Phase 9) ============ -->
+                    {% if order.status == 'delivered' %}
+                    <section class="qb-detail-card" data-aos="fade-up">
+                        <h3><i class='bx bx-star'></i> Rate your order</h3>
+                        {% for item in order.items.all %}
+                            {% if item.dish %}
+                                {% if item.dish_id in reviewed_dish_ids %}
+                                <div class="qb-review-yours">
+                                    <i class='bx bx-check-circle'></i> You already reviewed <strong>{{ item.dish_name }}</strong> — thank you!
+                                </div>
+                                {% else %}
+                                <div class="qb-rate-dish">
+                                    <strong>{{ item.dish_name }}</strong>
+                                    {% include 'reviews/includes/review_form.html' with target_type='dish' target_id=item.dish_id next=request.path order_id=order.order_id %}
+                                </div>
+                                {% endif %}
+                            {% endif %}
+                        {% endfor %}
+                    </section>
+                    {% endif %}
+
+                    <!-- ============ ITEMS ============ -->
+                    <section class="qb-detail-card" data-aos="fade-up">
+                        <h3><i class='bx bx-cart'></i> Items ({{ order.items.count }})</h3>
+                        {% for item in order.items.all %}
+                        <div class="qb-order-item-row">
+                            {% if item.image_url %}
+                            <img src="{{ item.image_url }}" alt="{{ item.dish_name }}" loading="lazy" decoding="async">
+                            {% else %}
+                            <div class="img-placeholder" style="font-size:22px;">🍽️</div>
+                            {% endif %}
+                            <div class="qb-order-item-info">
+                                <strong>{{ item.dish_name }}</strong>
+                                <small>₹{{ item.price|floatformat:"2" }} × {{ item.quantity }}</small>
+                            </div>
+                            <strong>₹{{ item.sub_total|floatformat:"2" }}</strong>
+                        </div>
+                        {% endfor %}
+
+                        {% if order.special_instructions %}
+                        <div class="qb-instructions-box">
+                            <i class='bx bx-message-square-dots'></i> {{ order.special_instructions }}
+                        </div>
+                        {% endif %}
+                    </section>
+
+                    <!-- ============ BILL ============ -->
+                    <section class="qb-detail-card" data-aos="fade-up">
+                        <h3><i class='bx bx-receipt'></i> Bill Details</h3>
+                        <div class="qb-bill-row"><span>Item total</span><span>₹{{ order.subtotal|floatformat:"2" }}</span></div>
+                        <div class="qb-bill-row"><span>Delivery fee</span>
+                            <span>{% if order.delivery_fee == 0 %}<span class="qb-free-text">FREE</span>{% else %}₹{{ order.delivery_fee|floatformat:"2" }}{% endif %}</span>
+                        </div>
+                        <div class="qb-bill-row"><span>GST (5%)</span><span>₹{{ order.tax|floatformat:"2" }}</span></div>
+                        {% if order.discount %}
+                        <div class="qb-bill-row discount"><span>Coupon {{ order.coupon_code }}</span><span>− ₹{{ order.discount|floatformat:"2" }}</span></div>
+                        {% endif %}
+                        <div class="qb-bill-row total">
+                            <span>{% if order.status == 'cancelled' %}Total{% elif order.payment_method == 'cod' %}To pay (COD){% else %}Paid{% endif %}</span>
+                            <span>₹{{ order.total|floatformat:"2" }}</span>
+                        </div>
+                    </section>
+                </main>
+
+                <aside>
+                    <!-- ============ ADDRESS ============ -->
+                    <section class="qb-detail-card" data-aos="fade-left">
+                        <h3><i class='bx bx-map'></i> Delivery Address</h3>
+                        <strong>{{ order.address.full_name }}</strong>
+                        <small style="display:block;color:#888;margin:2px 0 8px;">{{ order.address.phone }}</small>
+                        <p style="color:#555;line-height:1.6;font-size:14px;">{{ order.address_snapshot }}</p>
+                    </section>
+
+                    <!-- ============ PAYMENT ============ -->
+                    <section class="qb-detail-card" data-aos="fade-left">
+                        <h3><i class='bx bx-wallet-alt'></i> Payment</h3>
+                        <div class="qb-bill-row"><span>Method</span><span>{{ order.payment_display }}</span></div>
+                        <div class="qb-bill-row">
+                            <span>Status</span>
+                            <span>
+                                {% if order.status == 'cancelled' %}
+                                <span class="qb-status-badge cancelled">Refunded</span>
+                                {% elif order.payment_method == 'cod' %}
+                                <span class="qb-status-badge {% if order.status == 'delivered' %}delivered{% else %}preparing{% endif %}">
+                                    {% if order.status == 'delivered' %}Paid on delivery{% else %}Pay on delivery{% endif %}
+                                </span>
+                                {% else %}
+                                <span class="qb-status-badge delivered">Paid</span>
+                                {% endif %}
+                            </span>
+                        </div>
+                    </section>
+
+                    <!-- ============ CANCEL ============ -->
+                    {% if order.can_cancel %}
+                    <section class="qb-detail-card" data-aos="fade-left">
+                        <form method="post" action="{% url 'orders:order_cancel' order.order_id %}"
+                              onsubmit="return confirm('Cancel order {{ order.order_id }}? This cannot be undone.');">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-danger-outline" style="width:100%;">
+                                <i class='bx bx-x-circle'></i> Cancel this order
+                            </button>
+                        </form>
+                        <p class="qb-hint" style="margin-top:10px;text-align:center;">
+                            Free cancellation until the kitchen starts preparing.
+                        </p>
+                    </section>
+                    {% endif %}
+                </aside>
+            </div>
+
+        </div>
+    </div>
+
+{% endblock %}

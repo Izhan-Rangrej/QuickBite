@@ -1,0 +1,157 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ restaurant.name }} | QuickBite{% endblock %}
+
+{% block meta_description %}{{ restaurant.name }} — {{ restaurant.get_cuisine_type_display }} in {{ restaurant.address }}. Rated {{ restaurant.rating }}★, delivers in ~{{ restaurant.delivery_time }} mins. Order online on QuickBite.{% endblock %}
+{% block meta_keywords %}{{ restaurant.name }}, {{ restaurant.get_cuisine_type_display }}, restaurant, order online{% endblock %}
+{% block og_title %}{{ restaurant.name }} — {{ restaurant.get_cuisine_type_display }} | QuickBite{% endblock %}
+{% block og_description %}{{ restaurant.description|truncatechars:150 }}{% endblock %}
+{% block og_image %}{% if restaurant.image %}{{ site_url }}{{ restaurant.image.url }}{% else %}{{ block.super }}{% endif %}{% endblock %}
+{% block structured_data %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Restaurant",
+  "name": "{{ restaurant.name|escapejs }}",
+  "servesCuisine": "{{ restaurant.get_cuisine_type_display }}",
+  "address": "{{ restaurant.address|escapejs }}",
+  "telephone": "{{ restaurant.phone }}",
+  "aggregateRating": {
+    "@type": "AggregateRating",
+    "ratingValue": "{{ restaurant.rating }}",
+    "reviewCount": "{{ review_count|default:1 }}"
+  }
+}
+</script>
+{% endblock %}
+
+{% block content %}
+    <div class="qb-page">
+        <div class="container">
+
+            <!-- Breadcrumb -->
+            <nav class="qb-breadcrumb" aria-label="Breadcrumb">
+                <a href="{% url 'core:home' %}"><i class='bx bx-home'></i> Home</a>
+                <i class='bx bx-chevron-right'></i>
+                <a href="{% url 'core:restaurants' %}">Restaurants</a>
+                <i class='bx bx-chevron-right'></i>
+                <span class="current">{{ restaurant.name }}</span>
+            </nav>
+
+            <!-- ===== Hero banner ===== -->
+            <div class="qb-rest-hero" data-aos="fade-up">
+                {% if restaurant.image %}
+                <img src="{{ restaurant.image.url }}" alt="{{ restaurant.name }}">
+                {% endif %}
+                <div class="qb-rest-hero-overlay">
+                    <h1>{{ restaurant.name }}</h1>
+                    <div class="qb-rest-tags">
+                        <span class="qb-tag"><i class='bx bxs-star'></i> {{ restaurant.rating }} rating</span>
+                        <span class="qb-tag"><i class='bx bx-food-menu'></i> {{ restaurant.get_cuisine_type_display }}</span>
+                        <span class="qb-tag"><i class='bx bx-time-five'></i> {{ restaurant.delivery_time }} mins</span>
+                        {% if restaurant.offer_text %}
+                        <span class="qb-tag offer"><i class='bx bxs-offer'></i> {{ restaurant.offer_text }}</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- ===== Info strip ===== -->
+            <div class="qb-info-strip" data-aos="fade-up" data-aos-delay="100">
+                <div class="qb-info-item">
+                    <div class="icon"><i class='bx bx-map'></i></div>
+                    <div>
+                        <h5>Address</h5>
+                        <p>{{ restaurant.address }}</p>
+                    </div>
+                </div>
+                <div class="qb-info-item">
+                    <div class="icon"><i class='bx bx-phone'></i></div>
+                    <div>
+                        <h5>Phone</h5>
+                        <p>{{ restaurant.phone }}</p>
+                    </div>
+                </div>
+                <div class="qb-info-item">
+                    <div class="icon"><i class='bx bx-time'></i></div>
+                    <div>
+                        <h5>Timings</h5>
+                        <p>
+                            {% if restaurant.opening_time and restaurant.closing_time %}
+                                {{ restaurant.opening_time|time:"g:i A" }} – {{ restaurant.closing_time|time:"g:i A" }}
+                            {% else %}
+                                Open 24 hours
+                            {% endif %}
+                        </p>
+                    </div>
+                </div>
+                <div class="qb-info-item">
+                    <div class="icon"><i class='bx bxs-truck'></i></div>
+                    <div>
+                        <h5>Delivery</h5>
+                        <p>{{ restaurant.delivery_time }} mins</p>
+                    </div>
+                </div>
+                <div class="qb-info-item">
+                    <div class="icon"><i class='bx bx-rupee'></i></div>
+                    <div>
+                        <h5>Min Order</h5>
+                        <p>₹{{ restaurant.min_order|floatformat:"-2" }}</p>
+                    </div>
+                </div>
+            </div>
+
+            {% if restaurant.description %}
+            <p class="qb-dish-desc" data-aos="fade-up" style="max-width:720px;">{{ restaurant.description }}</p>
+            {% endif %}
+
+            <!-- ===== Menu grouped by category ===== -->
+            {% regroup dishes by category as menu_groups %}
+            {% for group in menu_groups %}
+            <div class="qb-menu-group">
+                <div class="qb-menu-group-title" data-aos="fade-up">
+                    <h3>{{ group.grouper.name }}</h3>
+                    <span class="pill">{{ group.list|length }} item{{ group.list|length|pluralize }}</span>
+                    <div class="line"></div>
+                </div>
+                <div class="dishes-grid">
+                    {% for dish in group.list %}
+                        {% cycle '0' '100' '200' as dish_delay silent %}
+                        {% include 'core/includes/dish_card.html' with dish=dish delay=dish_delay %}
+                    {% endfor %}
+                </div>
+            </div>
+            {% empty %}
+            <div class="empty-state" data-aos="fade-up">
+                <i class='bx bx-dish'></i>
+                <h3>Menu coming soon</h3>
+                <p>{{ restaurant.name }} hasn't added any dishes yet. Check back shortly!</p>
+            </div>
+            {% endfor %}
+
+            <!-- ===== Reviews (Phase 9) ===== -->
+            <div class="qb-reviews-block" data-aos="fade-up" style="margin-top:40px;">
+                {% if user.is_authenticated %}
+                    {% if user_review %}
+                    <div class="qb-review-yours">
+                        <i class='bx bx-check-circle'></i> You rated {{ restaurant.name }}
+                        {% include 'reviews/includes/stars.html' with value=user_review.rating %}
+                        {% if user_review.comment %}— “{{ user_review.comment }}”{% endif %}
+                    </div>
+                    {% else %}
+                    <h4 style="color:#212121;margin-bottom:12px;">Rate {{ restaurant.name }}</h4>
+                    {% include 'reviews/includes/review_form.html' with target_type='restaurant' target_id=restaurant.pk next=request.path %}
+                    {% endif %}
+                {% else %}
+                <p class="qb-hint"><a href="{% url 'accounts:login' %}?next={{ request.path }}" style="color:#FF5722;font-weight:600;">Log in</a> to review this restaurant.</p>
+                {% endif %}
+
+                {% include 'reviews/includes/review_list.html' %}
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block extra_js %}
+    <script src="{% static_min 'js/reviews.js' %}"></script>
+{% endblock %}

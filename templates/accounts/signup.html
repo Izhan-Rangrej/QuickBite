@@ -1,0 +1,65 @@
+{% extends 'accounts/auth_layout.html' %}
+
+{% block title %}Sign Up | QuickBite{% endblock %}
+
+{% block auth_content %}
+    <h1>Create account 🍔</h1>
+    <p class="qb-auth-sub">Join QuickBite — it takes less than a minute</p>
+
+    <form method="post" novalidate>
+        {% csrf_token %}
+
+        {% if form.non_field_errors %}
+        <div class="qb-form-error">
+            {% for error in form.non_field_errors %}<p>{{ error }}</p>{% endfor %}
+        </div>
+        {% endif %}
+
+        <div class="qb-form-group">
+            <label for="{{ form.username.id_for_label }}">Username</label>
+            {{ form.username }}
+            {% for error in form.username.errors %}<span class="qb-field-error">{{ error }}</span>{% endfor %}
+            {% if form.username.help_text %}<small class="qb-help">{{ form.username.help_text }}</small>{% endif %}
+        </div>
+
+        <div class="qb-form-group">
+            <label for="{{ form.email.id_for_label }}">Email</label>
+            {{ form.email }}
+            {% for error in form.email.errors %}<span class="qb-field-error">{{ error }}</span>{% endfor %}
+        </div>
+
+        <div class="qb-form-group">
+            <label for="{{ form.phone_number.id_for_label }}">Phone Number</label>
+            {{ form.phone_number }}
+            {% for error in form.phone_number.errors %}<span class="qb-field-error">{{ error }}</span>{% endfor %}
+        </div>
+
+        <div class="qb-form-group">
+            <label for="{{ form.password1.id_for_label }}">Password</label>
+            {{ form.password1 }}
+            {% for error in form.password1.errors %}<span class="qb-field-error">{{ error }}</span>{% endfor %}
+            {% if form.password1.help_text %}<small class="qb-help">{{ form.password1.help_text|safe }}</small>{% endif %}
+        </div>
+
+        <div class="qb-form-group">
+            <label for="{{ form.password2.id_for_label }}">Confirm Password</label>
+            {{ form.password2 }}
+            {% for error in form.password2.errors %}<span class="qb-field-error">{{ error }}</span>{% endfor %}
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-lg qb-btn-block" style="margin-top:8px;">
+            Create Account <i class='bx bxs-right-arrow-alt'></i>
+        </button>
+
+        <div class="qb-divider">or sign up with</div>
+
+        <div class="qb-social-row">
+            <a href="#" class="qb-social-btn" title="Google sign-up coming soon"><i class='bx bxl-google'></i> Google</a>
+            <a href="#" class="qb-social-btn" title="Facebook sign-up coming soon"><i class='bx bxl-facebook-circle'></i> Facebook</a>
+        </div>
+
+        <p class="qb-auth-footer">
+            Already have an account? <a class="qb-link" href="{% url 'accounts:login' %}">Sign in</a>
+        </p>
+    </form>
+{% endblock %}

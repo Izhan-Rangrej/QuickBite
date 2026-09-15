@@ -1,0 +1,71 @@
+{% extends 'base.html' %}
+
+{% block title %}All Restaurants | QuickBite{% endblock %}
+
+{% block meta_description %}All QuickBite partner restaurants — ratings, delivery times, minimum orders and cuisines. Find food near you.{% endblock %}
+{% block og_title %}Restaurants Near You | QuickBite{% endblock %}
+
+{% block content %}
+    <div class="qb-page">
+        <div class="container">
+
+            <!-- Breadcrumb -->
+            <nav class="qb-breadcrumb" aria-label="Breadcrumb">
+                <a href="{% url 'core:home' %}"><i class='bx bx-home'></i> Home</a>
+                <i class='bx bx-chevron-right'></i>
+                <span class="current">Restaurants</span>
+            </nav>
+
+            <div class="section-header" data-aos="fade-up">
+                <span class="section-tag">🏪 Browse</span>
+                <h2>All <span class="gradient-text">Restaurants</span></h2>
+                <p>{{ total_results }} restaurant{{ total_results|pluralize }} {% if has_location %}near {{ delivery_label }}{% else %}serving near you{% endif %}</p>
+            </div>
+
+            <!-- Filter toolbar (AJAX — no reloads) -->
+            <form method="get" class="qb-toolbar" id="restFilters" data-aos="fade-up">
+                <div class="qb-search">
+                    <i class='bx bx-search' style="color:#FF5722;"></i>
+                    <input type="text" name="q" value="{{ q }}" placeholder="Search restaurants..." data-debounce="400">
+                </div>
+                <select name="cuisine" class="qb-select">
+                    <option value="">All Cuisines</option>
+                    {% for value, label in cuisine_choices %}
+                    <option value="{{ value }}" {% if cuisine == value %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+                <select name="rating" class="qb-select">
+                    <option value="">Any Rating</option>
+                    <option value="4.5" {% if rating == '4.5' %}selected{% endif %}>4.5+ ★</option>
+                    <option value="4.0" {% if rating == '4.0' %}selected{% endif %}>4.0+ ★</option>
+                    <option value="3.5" {% if rating == '3.5' %}selected{% endif %}>3.5+ ★</option>
+                </select>
+                <select name="delivery" class="qb-select">
+                    <option value="">Any Delivery Time</option>
+                    <option value="20" {% if delivery == '20' %}selected{% endif %}>Under 20 mins</option>
+                    <option value="30" {% if delivery == '30' %}selected{% endif %}>Under 30 mins</option>
+                    <option value="45" {% if delivery == '45' %}selected{% endif %}>Under 45 mins</option>
+                </select>
+                <select name="veg" class="qb-select">
+                    <option value="">Veg + Non-Veg</option>
+                    <option value="1" {% if veg == '1' %}selected{% endif %}>🟢 Pure Veg</option>
+                    <option value="0" {% if veg == '0' %}selected{% endif %}>🔴 Non-Veg</option>
+                </select>
+                <select name="sort" class="qb-select">
+                    <option value="popular" {% if sort == 'popular' %}selected{% endif %}>Sort: Popularity</option>
+                    <option value="rating" {% if sort == 'rating' %}selected{% endif %}>Sort: Rating</option>
+                    <option value="delivery" {% if sort == 'delivery' %}selected{% endif %}>Sort: Delivery Time</option>
+                    {% if has_location %}<option value="distance" {% if sort == 'distance' %}selected{% endif %}>Sort: Distance</option>{% endif %}
+                </select>
+            </form>
+
+            <div id="restResults">
+                {% include 'core/includes/restaurant_results.html' %}
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block extra_js %}
+    <script src="{% static_min 'js/filters.js' %}"></script>
+{% endblock %}

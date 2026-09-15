@@ -1,0 +1,47 @@
+{% extends 'core/pages/base_page.html' %}
+
+{% block title %}Terms & Conditions | QuickBite{% endblock %}
+{% block meta_description %}Terms and conditions for using QuickBite food delivery.{% endblock %}
+{% block page_tag %}📜 The fine print{% endblock %}
+{% block crumb %}Terms{% endblock %}
+{% block page_heading_block %}Terms & <span class="gradient-text">Conditions</span>{% endblock %}
+
+{% block prose %}
+    <p class="qb-prose-note">Last updated: September 2026</p>
+
+    <h3>1. Using QuickBite</h3>
+    <p>By browsing or ordering on QuickBite you agree to these terms. You must be at least
+       18 years old (or have a guardian's consent) and provide accurate account details.</p>
+
+    <h3>2. Orders & contracts</h3>
+    <p>Placing an order makes an offer to buy from the restaurant. The contract forms when
+       the restaurant confirms the order. Prices shown include applicable taxes unless
+       stated otherwise; delivery fees and GST are itemised at checkout.</p>
+
+    <h3>3. Cancellations</h3>
+    <p>Orders can be cancelled from the order page while the status is
+       <em>Pending</em> or <em>Confirmed</em>. Once the kitchen marks an order
+       <em>Preparing</em>, cancellation is no longer possible because ingredients are
+       already committed.</p>
+
+    <h3>4. Restaurant partners</h3>
+    <p>Restaurants are responsible for food quality, hygiene and accurate menu
+       information. QuickBite may suspend listings that receive serious complaints.</p>
+
+    <h3>5. Acceptable use</h3>
+    <p>Don't misuse the service: no fake orders, no abusing coupons or refund flows, no
+       scraping, and no posting unlawful or abusive reviews. We may restrict accounts
+       that violate this.</p>
+
+    <h3>6. Liability</h3>
+    <p>QuickBite is a marketplace connecting you with restaurants. For food-related
+       issues the restaurant is the first point of responsibility; we will help
+       mediate. Our aggregate liability is limited to the value of the order in
+       question.</p>
+
+    <h3>7. Changes</h3>
+    <p>We may update these terms; the current version always lives on this page.
+       Continued use after changes means acceptance.</p>
+
+    <p>Questions about these terms? <a href="{% url 'core:contact' %}">Contact us</a>.</p>
+{% endblock %}

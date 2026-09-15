@@ -1,0 +1,105 @@
+{% extends 'base.html' %}
+
+{% block title %}Edit Profile | QuickBite{% endblock %}
+
+{% block content %}
+    <div class="qb-page">
+        <div class="container" style="max-width:820px;">
+
+            <!-- Breadcrumb -->
+            <nav class="qb-breadcrumb" aria-label="Breadcrumb">
+                <a href="{% url 'core:home' %}"><i class='bx bx-home'></i> Home</a>
+                <i class='bx bx-chevron-right'></i>
+                <a href="{% url 'accounts:profile' %}">My Profile</a>
+                <i class='bx bx-chevron-right'></i>
+                <span class="current">Edit</span>
+            </nav>
+
+            <div class="section-header" data-aos="fade-up" style="text-align:left;align-items:flex-start;">
+                <span class="section-tag">✏️ Account</span>
+                <h2>Edit <span class="gradient-text">Profile</span></h2>
+            </div>
+
+            <form method="post" enctype="multipart/form-data" novalidate
+                  style="background:#fff;border-radius:20px;padding:32px;box-shadow:0 4px 20px rgba(0,0,0,.06);"
+                  data-aos="fade-up" data-aos-delay="100">
+                {% csrf_token %}
+
+                {% if form.non_field_errors %}
+                <div class="qb-form-error">
+                    {% for error in form.non_field_errors %}<p>{{ error }}</p>{% endfor %}
+                </div>
+                {% endif %}
+
+                <!-- Avatar -->
+                <div class="qb-form-group" style="text-align:center;">
+                    {% if user.profile_picture %}
+                    <img class="qb-avatar-preview" src="{{ user.profile_picture.url }}" alt="Avatar">
+                    {% endif %}
+                    <label for="{{ form.profile_picture.id_for_label }}">Profile Picture</label>
+                    {{ form.profile_picture }}
+                    {% for error in form.profile_picture.errors %}<span class="qb-field-error">{{ error }}</span>{% endfor %}
+                </div>
+
+                <div class="qb-form-row">
+                    <div class="qb-form-group">
+                        <label for="{{ form.first_name.id_for_label }}">First Name</label>
+                        {{ form.first_name }}
+                        {% for error in form.first_name.errors %}<span class="qb-field-error">{{ error }}</span>{% endfor %}
+                    </div>
+                    <div class="qb-form-group">
+                        <label for="{{ form.last_name.id_for_label }}">Last Name</label>
+                        {{ form.last_name }}
+                        {% for error in form.last_name.errors %}<span class="qb-field-error">{{ error }}</span>{% endfor %}
+                    </div>
+                </div>
+
+                <div class="qb-form-row">
+                    <div class="qb-form-group">
+                        <label for="{{ form.email.id_for_label }}">Email</label>
+                        {{ form.email }}
+                        {% for error in form.email.errors %}<span class="qb-field-error">{{ error }}</span>{% endfor %}
+                    </div>
+                    <div class="qb-form-group">
+                        <label for="{{ form.phone_number.id_for_label }}">Phone Number</label>
+                        {{ form.phone_number }}
+                        {% for error in form.phone_number.errors %}<span class="qb-field-error">{{ error }}</span>{% endfor %}
+                    </div>
+                </div>
+
+                <div class="qb-form-group">
+                    <label for="{{ form.date_of_birth.id_for_label }}">Date of Birth</label>
+                    {{ form.date_of_birth }}
+                    {% for error in form.date_of_birth.errors %}<span class="qb-field-error">{{ error }}</span>{% endfor %}
+                </div>
+
+                <div class="qb-form-group">
+                    <label for="{{ form.address.id_for_label }}">Delivery Address</label>
+                    {{ form.address }}
+                    {% for error in form.address.errors %}<span class="qb-field-error">{{ error }}</span>{% endfor %}
+                </div>
+
+                <div class="qb-form-row">
+                    <div class="qb-form-group">
+                        <label for="{{ form.city.id_for_label }}">City</label>
+                        {{ form.city }}
+                        {% for error in form.city.errors %}<span class="qb-field-error">{{ error }}</span>{% endfor %}
+                    </div>
+                    <div class="qb-form-group">
+                        <label for="{{ form.pincode.id_for_label }}">PIN Code</label>
+                        {{ form.pincode }}
+                        {% for error in form.pincode.errors %}<span class="qb-field-error">{{ error }}</span>{% endfor %}
+                        <small class="qb-help">6-digit Indian PIN code</small>
+                    </div>
+                </div>
+
+                <div style="display:flex;gap:12px;margin-top:8px;flex-wrap:wrap;">
+                    <button type="submit" class="btn btn-primary" style="flex:1;">
+                        <i class='bx bx-save'></i> Save Changes
+                    </button>
+                    <a href="{% url 'accounts:profile' %}" class="qb-chip" style="padding:14px 24px;">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </div>
+{% endblock %}

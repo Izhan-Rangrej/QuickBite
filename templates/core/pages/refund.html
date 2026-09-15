@@ -1,0 +1,39 @@
+{% extends 'core/pages/base_page.html' %}
+
+{% block title %}Refund Policy | QuickBite{% endblock %}
+{% block meta_description %}QuickBite cancellation and refund policy — timelines, eligibility and how refunds are processed.{% endblock %}
+{% block page_tag %}↩️ Fair refunds{% endblock %}
+{% block crumb %}Refund Policy{% endblock %}
+{% block page_heading_block %}Refund <span class="gradient-text">Policy</span>{% endblock %}
+
+{% block prose %}
+    <p class="qb-prose-note">Last updated: September 2026</p>
+
+    <h3>Cancellation before preparation</h3>
+    <p>Cancel free of charge any time while your order is <em>Pending</em> or
+       <em>Confirmed</em>. Cash-on-Delivery orders need no refund — nothing was paid.</p>
+
+    <h3>Cancelled or failed orders (prepaid)</h3>
+    <p>If an order paid online is cancelled by you before preparation, by the restaurant,
+       or by us, the full amount is refunded to the original payment method within
+       <strong>5–7 working days</strong>.</p>
+
+    <h3>Wrong, missing or poor-quality items</h3>
+    <p>Report the issue from the order page within <strong>24 hours</strong> of delivery
+       with a photo where possible. After verification we refund the affected items —
+       fully or partially depending on the issue.</p>
+
+    <h3>Non-refundable situations</h3>
+    <ul>
+        <li>Orders cancelled after the restaurant starts preparing.</li>
+        <li>Complaints raised more than 24 hours after delivery.</li>
+        <li>Change-of-mind requests once food is delivered and acceptable.</li>
+    </ul>
+
+    <h3>Coupons</h3>
+    <p>If an order using a coupon is refunded, the coupon is restored to your account when
+       it is still within its validity window; expired coupons cannot be restored.</p>
+
+    <p>Need a refund? <a href="{% url 'core:contact' %}">Contact support</a> with your
+       order ID (it looks like <code>QB260914-XXXXXX</code>).</p>
+{% endblock %}

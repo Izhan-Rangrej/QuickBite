@@ -1,0 +1,90 @@
+{% load static %}<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Dashboard{% endblock %} | QuickBite</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link href="https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{% static_min 'css/style.css' %}">
+    <link rel="stylesheet" href="{% static_min 'css/pages.css' %}">
+    <link rel="stylesheet" href="{% static_min 'css/admin.css' %}">
+</head>
+<body class="qb-admin {% block body_class %}{% endblock %}">
+
+    <!-- ===== Sidebar ===== -->
+    <aside class="qb-admin-side" id="adminSide">
+        <div class="qb-admin-brand">
+            <i class='bx bxs-dish'></i>
+            <span>Quick<span class="highlight">Bite</span></span>
+        </div>
+        <nav class="qb-admin-nav">
+            {% block side_nav %}
+            <a href="{% url 'dashboard:home' %}" class="{% if request.resolver_match.url_name == 'home' %}active{% endif %}">
+                <i class='bx bx-grid-alt'></i> Dashboard</a>
+            <a href="{% url 'dashboard:orders' %}" class="{% if 'orders' in request.path %}active{% endif %}">
+                <i class='bx bx-receipt'></i> Orders</a>
+            <a href="{% url 'dashboard:restaurants' %}" class="{% if '/restaurants/' in request.path %}active{% endif %}">
+                <i class='bx bx-store-alt'></i> Restaurants</a>
+            <a href="{% url 'dashboard:dishes' %}" class="{% if '/dishes/' in request.path %}active{% endif %}">
+                <i class='bx bx-dish'></i> Dishes</a>
+            <a href="{% url 'dashboard:categories' %}" class="{% if '/categories/' in request.path %}active{% endif %}">
+                <i class='bx bx-category'></i> Categories</a>
+            <a href="{% url 'dashboard:users' %}" class="{% if '/users/' in request.path %}active{% endif %}">
+                <i class='bx bx-group'></i> Users</a>
+            <a href="{% url 'dashboard:coupons' %}" class="{% if '/coupons/' in request.path %}active{% endif %}">
+                <i class='bx bx-purchase-tag-alt'></i> Coupons</a>
+            <a href="{% url 'dashboard:reviews' %}" class="{% if '/reviews/' in request.path %}active{% endif %}">
+                <i class='bx bx-star'></i> Reviews
+                {% if flagged_reviews %}<span class="nav-badge">{{ flagged_reviews }}</span>{% endif %}</a>
+            {% endblock %}
+        </nav>
+        <div class="qb-admin-side-footer">
+            Signed in as <strong>{{ user.username }}</strong><br>
+            <a href="{% url 'core:home' %}"><i class='bx bx-link-external'></i> Back to website</a>
+        </div>
+    </aside>
+
+    <!-- ===== Main ===== -->
+    <div class="qb-admin-main">
+        <header class="qb-admin-top">
+            <button type="button" class="qb-admin-burger" id="sideBurger"><i class='bx bx-menu'></i></button>
+            <h1>{% block page_title %}Dashboard{% endblock %}</h1>
+            <div class="qb-admin-user">
+                <div class="qb-admin-user-avatar">{{ user.initials }}</div>
+                <span>{{ user.display_name }}</span>
+            </div>
+        </header>
+
+        <main class="qb-admin-body">
+            {% if messages %}
+            <div class="qb-admin-messages">
+                {% for message in messages %}
+                <div class="qb-flash {{ message.tags }}"><i class='bx bx-info-circle'></i> {{ message }}</div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            {% block admin_content %}{% endblock %}
+        </main>
+    </div>
+
+    <style>
+        .qb-admin-messages { margin-bottom: 18px; }
+        .qb-flash {
+            border-radius: 12px; padding: 12px 18px; font-size: 13.5px; margin-bottom: 8px;
+            background: #E3F2FD; color: #1565C0; display: flex; align-items: center; gap: 8px;
+        }
+        .qb-flash.success { background: #E8F5E9; color: #2E7D32; }
+        .qb-flash.error { background: #FFEBEE; color: #C62828; }
+        .qb-flash.warning { background: #FFF8E1; color: #F57F17; }
+        .qb-flash.info { background: #FFF3E0; color: #E65100; }
+    </style>
+    <script>
+        document.getElementById('sideBurger').addEventListener('click', () => {
+            document.body.classList.toggle('qb-side-open');
+        });
+    </script>
+    {% block admin_js %}{% endblock %}
+</body>
+</html>

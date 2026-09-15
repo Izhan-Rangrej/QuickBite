@@ -1,0 +1,12 @@
+{% extends 'dashboard/base.html' %}
+
+{% block body_class %}qb-panel-page{% endblock %}
+
+{% block side_nav %}
+    <a href="{% url 'panel:home' %}" class="{% if request.resolver_match.url_name == 'home' %}active{% endif %}">
+        <i class='bx bx-grid-alt'></i> Overview</a>
+    <a href="{% url 'panel:orders' %}" class="{% if '/orders/' in request.path %}active{% endif %}">
+        <i class='bx bx-receipt'></i> Orders</a>
+    <a href="{% url 'panel:dishes' %}" class="{% if '/dishes/' in request.path %}active{% endif %}">
+        <i class='bx bx-dish'></i> My Dishes</a>
+{% endblock %}

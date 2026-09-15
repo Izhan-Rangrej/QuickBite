@@ -1,0 +1,96 @@
+{% extends 'base.html' %}
+
+{% block title %}My Profile | QuickBite{% endblock %}
+
+{% block content %}
+    <div class="qb-page">
+        <div class="container">
+
+            <!-- Breadcrumb -->
+            <nav class="qb-breadcrumb" aria-label="Breadcrumb">
+                <a href="{% url 'core:home' %}"><i class='bx bx-home'></i> Home</a>
+                <i class='bx bx-chevron-right'></i>
+                <span class="current">My Profile</span>
+            </nav>
+
+            <!-- ===== Header card ===== -->
+            <div class="qb-profile-header" data-aos="fade-up">
+                {% if user.profile_picture %}
+                <img class="qb-profile-avatar" src="{{ user.profile_picture.url }}" alt="{{ user.username }}">
+                {% else %}
+                <span class="qb-profile-avatar">{{ user.initials }}</span>
+                {% endif %}
+
+                <div class="qb-profile-id">
+                    <h1>{{ user.display_name }}</h1>
+                    <p>@{{ user.username }} · joined {{ user.date_joined|date:"M Y" }}</p>
+                    <div style="display:flex;align-items:center;gap:10px;margin-top:10px;">
+                        <div class="qb-progress" title="Profile completeness"><span style="width:{{ user.profile_complete }}%;"></span></div>
+                        <small style="color:#999;font-size:12px;">{{ user.profile_complete }}% complete</small>
+                    </div>
+                </div>
+
+                <div class="qb-profile-actions">
+                    <a href="{% url 'accounts:profile_edit' %}" class="btn btn-primary">
+                        <i class='bx bx-edit'></i> Edit Profile
+                    </a>
+                    <a href="{% url 'accounts:password_change' %}" class="qb-chip">
+                        <i class='bx bx-lock-alt'></i> Change Password
+                    </a>
+                </div>
+            </div>
+
+            <!-- ===== Info grid ===== -->
+            <div class="qb-info-grid">
+                <div class="qb-info-card" data-aos="fade-up" data-aos-delay="0">
+                    <div class="icon"><i class='bx bx-envelope'></i></div>
+                    <div>
+                        <h5>Email</h5>
+                        <p>{{ user.email|default:"—" }}</p>
+                    </div>
+                </div>
+                <div class="qb-info-card" data-aos="fade-up" data-aos-delay="50">
+                    <div class="icon"><i class='bx bx-phone'></i></div>
+                    <div>
+                        <h5>Phone</h5>
+                        <p>{{ user.phone_number|default:"—" }}</p>
+                    </div>
+                </div>
+                <div class="qb-info-card" data-aos="fade-up" data-aos-delay="100">
+                    <div class="icon"><i class='bx bx-calendar'></i></div>
+                    <div>
+                        <h5>Date of Birth</h5>
+                        <p>{{ user.date_of_birth|date:"d M Y"|default:"—" }}</p>
+                    </div>
+                </div>
+                <div class="qb-info-card" data-aos="fade-up" data-aos-delay="150">
+                    <div class="icon"><i class='bx bx-map'></i></div>
+                    <div>
+                        <h5>Delivery Address</h5>
+                        <p>
+                            {% if user.address %}
+                                {{ user.address }}{% if user.city %}, {{ user.city }}{% endif %}{% if user.pincode %} — {{ user.pincode }}{% endif %}
+                            {% else %}
+                                <a class="qb-link" href="{% url 'accounts:profile_edit' %}">Add your address →</a>
+                            {% endif %}
+                        </p>
+                    </div>
+                </div>
+                <div class="qb-info-card" data-aos="fade-up" data-aos-delay="200">
+                    <div class="icon"><i class='bx bx-city'></i></div>
+                    <div>
+                        <h5>City</h5>
+                        <p>{{ user.city|default:"—" }}</p>
+                    </div>
+                </div>
+                <div class="qb-info-card" data-aos="fade-up" data-aos-delay="250">
+                    <div class="icon"><i class='bx bx-mail-send'></i></div>
+                    <div>
+                        <h5>PIN Code</h5>
+                        <p>{{ user.pincode|default:"—" }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

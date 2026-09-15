@@ -1,0 +1,42 @@
+{% extends 'core/pages/base_page.html' %}
+
+{% block title %}Privacy Policy | QuickBite{% endblock %}
+{% block meta_description %}How QuickBite collects, uses and protects your personal data.{% endblock %}
+{% block page_tag %}🔒 Your data, your rules{% endblock %}
+{% block crumb %}Privacy{% endblock %}
+{% block page_heading_block %}Privacy <span class="gradient-text">Policy</span>{% endblock %}
+
+{% block prose %}
+    <p class="qb-prose-note">Last updated: September 2026</p>
+
+    <h3>What we collect</h3>
+    <ul>
+        <li><strong>Account data:</strong> name, email, phone number and password (hashed).</li>
+        <li><strong>Order data:</strong> addresses, order history and delivery instructions.</li>
+        <li><strong>Location (optional):</strong> a coarse delivery location you explicitly
+            share to see nearby restaurants. We never track you in the background.</li>
+        <li><strong>Usage data:</strong> pages visited and search queries, to improve the product.</li>
+    </ul>
+
+    <h3>How we use it</h3>
+    <p>To process orders, deliver food, personalise suggestions, prevent fraud, and send
+       transactional emails (order confirmations and status updates). We do not sell your
+       personal data — ever.</p>
+
+    <h3>Cookies</h3>
+    <p>We use essential cookies for your session, cart and CSRF protection. Analytics
+       cookies are only loaded if enabled and are IP-anonymised.</p>
+
+    <h3>Sharing</h3>
+    <p>Your delivery details are shared with the restaurant and delivery partner handling
+       your order — only what they need to complete it.</p>
+
+    <h3>Your rights</h3>
+    <p>You can request a copy of your data, correct it, or ask us to delete your account
+       and associated data. Email <strong>hello@quickbite.com</strong> and we'll act within
+       30 days.</p>
+
+    <h3>Security</h3>
+    <p>Passwords are stored hashed, connections are protected by HTTPS in production, and
+       access to personal data is limited to staff who need it.</p>
+{% endblock %}

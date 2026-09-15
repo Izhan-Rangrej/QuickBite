@@ -1,0 +1,54 @@
+{% comment %} Reusable dish card — expects `dish`, optional `delay` (AOS delay) and
+   `show_move` (wishlist page: adds a Move-to-Cart button).
+   Cart/wishlist buttons carry data-dish-id for cart.js AJAX handlers. {% endcomment %}
+<div class="dish-card" data-category="{{ dish.category.slug }}" data-aos="fade-up" data-aos-delay="{{ delay|default:'0' }}">
+    <div class="dish-img-wrapper">
+        {% if dish.image %}
+        <img src="{{ dish.image.url }}" alt="{{ dish.name }}" loading="lazy" decoding="async">
+        {% else %}
+        <div class="img-placeholder">🍽️</div>
+        {% endif %}
+        <div class="dish-overlay">
+            <a class="quick-view-btn" href="{% url 'core:dish_detail' dish.slug %}">Quick View</a>
+        </div>
+        {% if dish.is_bestseller %}
+        <span class="dish-badge bestseller">Bestseller</span>
+        {% elif dish.is_new %}
+        <span class="dish-badge new">New</span>
+        {% elif dish.discount_price %}
+        <span class="dish-badge">{{ dish.discount_percent }}% OFF</span>
+        {% endif %}
+        <button class="wishlist-btn {% if dish.id in wishlist_ids %}active{% endif %}"
+                data-dish-id="{{ dish.id }}" aria-label="Toggle wishlist">
+            <i class='bx {% if dish.id in wishlist_ids %}bxs-heart{% else %}bx-heart{% endif %}'></i>
+        </button>
+    </div>
+    <div class="dish-info">
+        <div class="dish-meta">
+            <a href="{% url 'core:restaurant_detail' dish.restaurant.slug %}" class="dish-restaurant">{{ dish.restaurant.name }}</a>
+            <span class="dish-rating"><i class='bx bxs-star'></i> {{ dish.rating }}</span>
+        </div>
+        <h3><a class="qb-title-link" href="{% url 'core:dish_detail' dish.slug %}">{{ dish.name }}</a></h3>
+        <p class="dish-desc">{{ dish.description|truncatechars:45 }}</p>
+        <div class="dish-footer">
+            <div class="dish-price">
+                <span class="current-price">₹{{ dish.effective_price|floatformat:"-2" }}</span>
+                {% if dish.discount_price %}
+                <span class="old-price">₹{{ dish.price|floatformat:"-2" }}</span>
+                {% endif %}
+            </div>
+            <button class="add-to-cart-btn" data-dish-id="{{ dish.id }}">
+                <i class='bx bx-plus'></i> ADD
+            </button>
+        </div>
+        <div class="dish-delivery-info">
+            <span><i class='bx bx-time-five'></i> {{ dish.preparation_time }} mins</span>
+            <span><i class='bx bx-cycling'></i> Free delivery</span>
+        </div>
+        {% if show_move %}
+        <button class="qb-move-btn" data-dish-id="{{ dish.id }}">
+            <i class='bx bx-cart-add'></i> Move to Cart
+        </button>
+        {% endif %}
+    </div>
+</div>

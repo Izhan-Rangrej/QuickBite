@@ -1,0 +1,69 @@
+{% extends 'dashboard/base.html' %}
+
+{% block title %}Orders{% endblock %}
+{% block page_title %}Orders{% endblock %}
+
+{% block admin_content %}
+    <form method="get" class="qb-admin-toolbar">
+        <input type="text" name="q" value="{{ q }}" placeholder="Search order ID / customer...">
+        <select name="status" onchange="this.form.submit()">
+            <option value="">All statuses</option>
+            {% for value, label in status_choices %}
+            <option value="{{ value }}" {% if current_status == value %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+        </select>
+        <button type="submit" class="qb-btn primary"><i class='bx bx-search'></i> Filter</button>
+        <div class="spacer"></div>
+        <span style="font-size:13px;color:#888;">Revenue in view: <strong style="color:#FF5722;">₹{{ revenue|floatformat:"2" }}</strong></span>
+    </form>
+
+    <div class="qb-panel">
+        <div class="qb-table-wrap">
+            <table class="qb-table">
+                <thead>
+                <tr>
+                    <th>Order</th><th>Customer</th><th>Placed</th><th>Items</th>
+                    <th>Total</th><th>Status</th><th>Update</th><th></th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for order in page_obj %}
+                <tr>
+                    <td class="t-strong">{{ order.order_id }}</td>
+                    <td>{{ order.user.display_name }}<br><small style="color:#999;">{{ order.user.email }}</small></td>
+                    <td>{{ order.created_at|date:"d M, H:i" }}</td>
+                    <td>{{ order.items.count }}</td>
+                    <td class="t-money">₹{{ order.total|floatformat:"2" }}</td>
+                    <td><span class="qb-status-badge {{ order.status }}">{{ order.get_status_display }}</span></td>
+                    <td>
+                        <form method="post" action="{% url 'dashboard:order_status_update' order.order_id %}"
+                              style="display:flex;gap:6px;align-items:center;">
+                            {% csrf_token %}
+                            <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                            <select name="status" class="qb-status-select">
+                                {% for value, label in status_choices %}
+                                <option value="{{ value }}" {% if order.status == value %}selected{% endif %}>{{ label }}</option>
+                                {% endfor %}
+                            </select>
+                            <button type="submit" class="qb-btn ghost sm" title="Save status"><i class='bx bx-check'></i></button>
+                        </form>
+                    </td>
+                    <td><a href="{% url 'dashboard:order_view' order.order_id %}" class="qb-btn ghost sm"><i class='bx bx-show'></i> View</a></td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="8" style="color:#999;text-align:center;padding:30px;">No orders match this filter.</td></tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        {% if page_obj.paginator.num_pages > 1 %}
+        <div class="pagination" style="margin-top:18px;">
+            {% for num in page_obj.paginator.page_range %}
+            <a class="page-btn {% if num == page_obj.number %}active{% endif %}"
+               href="?q={{ q }}&status={{ current_status }}&page={{ num }}">{{ num }}</a>
+            {% endfor %}
+        </div>
+        {% endif %}
+    </div>
+{% endblock %}

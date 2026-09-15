@@ -1,0 +1,58 @@
+{% extends 'dashboard/base.html' %}
+
+{% block title %}Restaurants{% endblock %}
+{% block page_title %}Restaurants{% endblock %}
+
+{% block admin_content %}
+    <form method="get" class="qb-admin-toolbar">
+        <input type="text" name="q" value="{{ q }}" placeholder="Search restaurants...">
+        <button type="submit" class="qb-btn primary"><i class='bx bx-search'></i> Search</button>
+        <div class="spacer"></div>
+        <a href="{% url 'dashboard:restaurant_new' %}" class="qb-btn primary"><i class='bx bx-plus'></i> New restaurant</a>
+    </form>
+
+    <div class="qb-panel">
+        <div class="qb-table-wrap">
+            <table class="qb-table">
+                <thead>
+                <tr><th></th><th>Name</th><th>Cuisine</th><th>Rating</th><th>Delivery</th>
+                    <th>Dishes</th><th>Owner</th><th>Status</th><th>Actions</th></tr>
+                </thead>
+                <tbody>
+                {% for r in restaurants %}
+                <tr>
+                    <td>
+                        {% if r.image %}<img class="thumb" src="{{ r.image.url }}" alt="{{ r.name }}" loading="lazy">{% else %}<span class="thumb-ph">🏪</span>{% endif %}
+                    </td>
+                    <td class="t-strong">{{ r.name }}<br><small style="color:#999;font-weight:400;">{{ r.address|truncatechars:34 }}</small></td>
+                    <td>{{ r.get_cuisine_type_display }}</td>
+                    <td>{{ r.rating }} ★</td>
+                    <td>{{ r.delivery_time }} min</td>
+                    <td>{{ r.dish_count }}</td>
+                    <td>{{ r.owner.username|default:"—" }}</td>
+                    <td>
+                        <span class="qb-status-badge {% if r.is_active %}delivered{% else %}cancelled{% endif %}">
+                            {% if r.is_active %}Active{% else %}Hidden{% endif %}</span>
+                    </td>
+                    <td style="white-space:nowrap;">
+                        <a class="qb-btn ghost sm" href="{{ r.get_absolute_url }}" target="_blank" title="View on site"><i class='bx bx-link-external'></i></a>
+                        <a class="qb-btn ghost sm" href="{% url 'dashboard:restaurant_edit' r.pk %}" title="Edit"><i class='bx bx-edit'></i></a>
+                        <form method="post" action="{% url 'dashboard:restaurant_toggle' r.pk %}" style="display:inline;">
+                            {% csrf_token %}
+                            <button class="qb-btn ghost sm" title="Toggle visibility"><i class='bx {% if r.is_active %}bx-hide{% else %}bx-show{% endif %}'></i></button>
+                        </form>
+                        <form method="post" action="{% url 'dashboard:restaurant_delete' r.pk %}" style="display:inline;"
+                              onsubmit="return confirm('Delete {{ r.name }} and ALL its dishes? This cannot be undone.');">
+                            {% csrf_token %}
+                            <button class="qb-btn danger sm" title="Delete"><i class='bx bx-trash'></i></button>
+                        </form>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="9" style="color:#999;text-align:center;padding:30px;">No restaurants found.</td></tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+{% endblock %}

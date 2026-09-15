@@ -1,0 +1,64 @@
+{% extends 'base.html' %}
+
+{% comment %} Split-screen auth layout: food visual left · form right.
+   Navbar & footer from base.html are switched off via empty blocks. {% endcomment %}
+{% block navbar %}{% endblock %}
+{% block footer %}{% endblock %}
+
+{% block content %}
+<div class="qb-auth-wrap">
+
+    <!-- ===== Visual side ===== -->
+    <div class="qb-auth-visual">
+        <img src="https://images.unsplash.com/photo-1568901346375-23c9450c58cd?w=900" alt="Delicious food">
+        <div class="qb-auth-visual-content">
+            <a href="{% url 'core:home' %}" class="qb-auth-logo" data-aos="fade-down">
+                <i class='bx bxs-dish'></i>
+                <span>QuickBite</span>
+            </a>
+            <div class="qb-auth-quote" data-aos="fade-up" data-aos-delay="150">
+                <div class="stars">
+                    <i class='bx bxs-star'></i><i class='bx bxs-star'></i><i class='bx bxs-star'></i><i class='bx bxs-star'></i><i class='bx bxs-star'></i>
+                </div>
+                <h2>Hot, fresh food<br>delivered in minutes.</h2>
+                <p>Join 10,000+ happy customers ordering from 1,000+ restaurants. Exclusive deals wait inside your account.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== Form side ===== -->
+    <div class="qb-auth-form-side">
+        <div class="qb-auth-card" data-aos="fade-left">
+            <a href="{% url 'core:home' %}" class="qb-auth-back"><i class='bx bx-arrow-back'></i> Back to home</a>
+            {% block auth_content %}{% endblock %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+    <script>
+        // Show/hide password toggle — auto-injected beside every password input
+        document.querySelectorAll('input[type="password"].qb-input').forEach(function (input) {
+            let wrap = input.parentElement;
+            if (!wrap.classList.contains('qb-input-wrap')) {
+                wrap = document.createElement('div');
+                wrap.className = 'qb-input-wrap';
+                input.parentNode.insertBefore(wrap, input);
+                wrap.appendChild(input);
+            }
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'qb-eye';
+            btn.setAttribute('aria-label', 'Show password');
+            btn.innerHTML = "<i class='bx bx-show'></i>";
+            btn.addEventListener('click', function () {
+                const show = input.type === 'password';
+                input.type = show ? 'text' : 'password';
+                btn.innerHTML = show ? "<i class='bx bx-hide'></i>" : "<i class='bx bx-show'></i>";
+                btn.setAttribute('aria-label', show ? 'Hide password' : 'Show password');
+            });
+            wrap.appendChild(btn);
+        });
+    </script>
+{% endblock %}

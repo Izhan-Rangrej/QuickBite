@@ -1,0 +1,94 @@
+{% extends 'dashboard/base.html' %}
+
+{% block title %}{{ order.order_id }}{% endblock %}
+{% block page_title %}Order {{ order.order_id }}{% endblock %}
+
+{% block admin_content %}
+    <div class="qb-charts-row" style="grid-template-columns: 2fr 1fr;">
+        <div>
+            <div class="qb-panel">
+                <h3><i class='bx bx-dish'></i> Items</h3>
+                <div class="qb-table-wrap">
+                    <table class="qb-table">
+                        <thead><tr><th>Dish</th><th>Qty</th><th>Price</th><th>Total</th></tr></thead>
+                        <tbody>
+                        {% for item in order.items.all %}
+                        <tr>
+                            <td class="t-strong">{{ item.dish_name }}</td>
+                            <td>{{ item.quantity }}</td>
+                            <td>₹{{ item.price|floatformat:"2" }}</td>
+                            <td class="t-money">₹{{ item.sub_total|floatformat:"2" }}</td>
+                        </tr>
+                        {% endfor %}
+                        <tr>
+                            <td colspan="3" style="text-align:right;color:#888;">Subtotal</td>
+                            <td class="t-money">₹{{ order.subtotal|floatformat:"2" }}</td>
+                        </tr>
+                        <tr>
+                            <td colspan="3" style="text-align:right;color:#888;">Delivery</td>
+                            <td>₹{{ order.delivery_fee|floatformat:"2" }}</td>
+                        </tr>
+                        <tr>
+                            <td colspan="3" style="text-align:right;color:#888;">GST (5%)</td>
+                            <td>₹{{ order.tax|floatformat:"2" }}</td>
+                        </tr>
+                        {% if order.discount %}
+                        <tr>
+                            <td colspan="3" style="text-align:right;color:#2E7D32;">Coupon {{ order.coupon_code }}</td>
+                            <td style="color:#2E7D32;font-weight:700;">− ₹{{ order.discount|floatformat:"2" }}</td>
+                        </tr>
+                        {% endif %}
+                        <tr>
+                            <td colspan="3" style="text-align:right;font-weight:700;color:#212121;">TOTAL</td>
+                            <td class="t-money" style="font-size:15px;">₹{{ order.total|floatformat:"2" }}</td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </div>
+                {% if order.special_instructions %}
+                <p style="margin-top:14px;font-size:13px;color:#BF360C;background:#FFF8F5;border:1px dashed #FFCCBC;border-radius:10px;padding:10px 14px;">
+                    <i class='bx bx-message-square-dots'></i> {{ order.special_instructions }}
+                </p>
+                {% endif %}
+            </div>
+        </div>
+
+        <div>
+            <div class="qb-panel">
+                <h3><i class='bx bx-user'></i> Customer</h3>
+                <p style="font-size:13.5px;color:#444;line-height:1.8;">
+                    <strong>{{ order.user.display_name }}</strong><br>
+                    {{ order.user.email }}<br>
+                    Joined {{ order.user.date_joined|date:"d M Y" }}
+                </p>
+            </div>
+            <div class="qb-panel">
+                <h3><i class='bx bx-map'></i> Deliver to</h3>
+                <p style="font-size:13.5px;color:#444;line-height:1.8;">
+                    <strong>{{ order.address.full_name }}</strong> ({{ order.address.phone }})<br>
+                    {{ order.address_snapshot }}
+                </p>
+                <p style="font-size:12.5px;color:#888;margin-top:8px;">{{ order.payment_display }}</p>
+            </div>
+            <div class="qb-panel">
+                <h3><i class='bx bx-transfer-alt'></i> Status</h3>
+                <p style="margin-bottom:12px;">
+                    <span class="qb-status-badge {{ order.status }}">{{ order.get_status_display }}</span>
+                    <small style="color:#999;display:block;margin-top:8px;">Placed {{ order.created_at|date:"d M Y, H:i" }}</small>
+                    {% if order.delivered_at %}<small style="color:#2E7D32;">Delivered {{ order.delivered_at|date:"d M Y, H:i" }}</small>{% endif %}
+                </p>
+                <form method="post" action="{% url 'dashboard:order_status_update' order.order_id %}">
+                    {% csrf_token %}
+                    <select name="status" class="qb-status-select" style="width:100%;margin-bottom:10px;">
+                        {% for value, label in status_choices %}
+                        <option value="{{ value }}" {% if order.status == value %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                    <button type="submit" class="qb-btn primary" style="width:100%;">
+                        <i class='bx bx-save'></i> Update & notify customer
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+{% endblock %}

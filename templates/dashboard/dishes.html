@@ -1,0 +1,85 @@
+{% extends 'dashboard/base.html' %}
+
+{% block title %}Dishes{% endblock %}
+{% block page_title %}Dishes{% endblock %}
+
+{% block admin_content %}
+    <form method="get" class="qb-admin-toolbar">
+        <input type="text" name="q" value="{{ q }}" placeholder="Search dishes...">
+        <select name="restaurant" onchange="this.form.submit()">
+            <option value="">All restaurants</option>
+            {% for r in restaurants %}
+            <option value="{{ r.pk }}" {% if cur_restaurant == r.pk|stringformat:"s" %}selected{% endif %}>{{ r.name }}</option>
+            {% endfor %}
+        </select>
+        <select name="category" onchange="this.form.submit()">
+            <option value="">All categories</option>
+            {% for c in categories %}
+            <option value="{{ c.pk }}" {% if cur_category == c.pk|stringformat:"s" %}selected{% endif %}>{{ c.name }}</option>
+            {% endfor %}
+        </select>
+        <button type="submit" class="qb-btn primary"><i class='bx bx-search'></i> Filter</button>
+        <div class="spacer"></div>
+        <a href="{% url 'dashboard:dish_new' %}" class="qb-btn primary"><i class='bx bx-plus'></i> New dish</a>
+    </form>
+
+    <div class="qb-panel">
+        <div class="qb-table-wrap">
+            <table class="qb-table">
+                <thead>
+                <tr><th></th><th>Dish</th><th>Restaurant</th><th>Category</th>
+                    <th>Price</th><th>Prep</th><th>Rating</th><th>Status</th><th>Actions</th></tr>
+                </thead>
+                <tbody>
+                {% for dish in page_obj %}
+                <tr>
+                    <td>
+                        {% if dish.image %}<img class="thumb" src="{{ dish.image.url }}" alt="{{ dish.name }}" loading="lazy">{% else %}<span class="thumb-ph">🍽️</span>{% endif %}
+                    </td>
+                    <td class="t-strong">
+                        {{ dish.name }}
+                        {% if dish.is_bestseller %}<small style="color:#FF5722;">🔥 bestseller</small>{% endif %}
+                        {% if dish.is_new %}<small style="color:#2E7D32;">✨ new</small>{% endif %}
+                    </td>
+                    <td>{{ dish.restaurant.name }}</td>
+                    <td>{{ dish.category.name }}</td>
+                    <td class="t-money">
+                        {% if dish.discount_price %}<s style="color:#bbb;font-weight:400;">₹{{ dish.price|floatformat:"0" }}</s> ₹{{ dish.discount_price|floatformat:"0" }}
+                        {% else %}₹{{ dish.price|floatformat:"0" }}{% endif %}
+                    </td>
+                    <td>{{ dish.preparation_time }} min</td>
+                    <td>{{ dish.rating }} ★</td>
+                    <td>
+                        <span class="qb-status-badge {% if dish.is_available %}delivered{% else %}cancelled{% endif %}">
+                            {% if dish.is_available %}Available{% else %}Sold out{% endif %}</span>
+                    </td>
+                    <td style="white-space:nowrap;">
+                        <a class="qb-btn ghost sm" href="{% url 'dashboard:dish_edit' dish.pk %}" title="Edit"><i class='bx bx-edit'></i></a>
+                        <form method="post" action="{% url 'dashboard:dish_toggle' dish.pk %}" style="display:inline;">
+                            {% csrf_token %}
+                            <button class="qb-btn ghost sm" title="Toggle availability"><i class='bx bx-power-off'></i></button>
+                        </form>
+                        <form method="post" action="{% url 'dashboard:dish_delete' dish.pk %}" style="display:inline;"
+                              onsubmit="return confirm('Delete {{ dish.name }}?');">
+                            {% csrf_token %}
+                            <button class="qb-btn danger sm" title="Delete"><i class='bx bx-trash'></i></button>
+                        </form>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="9" style="color:#999;text-align:center;padding:30px;">No dishes found.</td></tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        {% if page_obj.paginator.num_pages > 1 %}
+        <div class="pagination" style="margin-top:18px;">
+            {% for num in page_obj.paginator.page_range %}
+            <a class="page-btn {% if num == page_obj.number %}active{% endif %}"
+               href="?q={{ q }}&restaurant={{ cur_restaurant }}&category={{ cur_category }}&page={{ num }}">{{ num }}</a>
+            {% endfor %}
+        </div>
+        {% endif %}
+    </div>
+{% endblock %}

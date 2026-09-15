@@ -1,0 +1,50 @@
+{% extends 'base.html' %}
+
+{% block title %}My Wishlist | QuickBite{% endblock %}
+
+{% block content %}
+    <div class="qb-page" id="isWishlistPage">
+        <div class="container">
+
+            <!-- Breadcrumb -->
+            <nav class="qb-breadcrumb" aria-label="Breadcrumb">
+                <a href="{% url 'core:home' %}"><i class='bx bx-home'></i> Home</a>
+                <i class='bx bx-chevron-right'></i>
+                <span class="current">Wishlist</span>
+            </nav>
+
+            <div class="section-header" data-aos="fade-up">
+                <span class="section-tag">❤️ Saved for later</span>
+                <h2>My <span class="gradient-text">Wishlist</span></h2>
+                <p>{{ wishlist_dishes|length }} dish{{ wishlist_dishes|length|pluralize }} you love</p>
+            </div>
+
+            {% if not user.is_authenticated %}
+            <div class="empty-state" data-aos="fade-up">
+                <i class='bx bx-lock-alt'></i>
+                <h3>Sign in to see your wishlist</h3>
+                <p>Your saved dishes live in your account.</p>
+                <a href="{% url 'accounts:login' %}?next={% url 'cart:wishlist_page' %}" class="btn btn-primary" style="margin-top:16px;">
+                    Sign In <i class='bx bxs-right-arrow-alt'></i>
+                </a>
+            </div>
+            {% else %}
+            <div class="dishes-grid">
+                {% for dish in wishlist_dishes %}
+                    {% cycle '0' '100' '200' as wish_delay silent %}
+                    {% include 'core/includes/dish_card.html' with dish=dish delay=wish_delay show_move=True %}
+                {% empty %}
+                <div class="empty-state qb-empty-cart">
+                    <div class="qb-empty-emoji">💔</div>
+                    <h3>Your wishlist is empty</h3>
+                    <p>Tap the heart on any dish to save it here.</p>
+                    <a href="{% url 'core:menu' %}" class="btn btn-primary" style="margin-top:16px;">
+                        Explore Menu <i class='bx bxs-right-arrow-alt'></i>
+                    </a>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+{% endblock %}

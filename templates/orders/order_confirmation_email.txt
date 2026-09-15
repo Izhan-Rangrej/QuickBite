@@ -1,0 +1,36 @@
+Hi {{ order.user.display_name }},
+
+Your QuickBite order is confirmed! 🍔
+
+────────────────────────────────────
+ORDER {{ order.order_id }}
+Placed: {{ order.created_at|date:"d M Y, g:i A" }}
+Estimated delivery: ~{{ order.eta_minutes }} minutes
+Payment: {{ order.payment_display }}
+────────────────────────────────────
+
+ITEMS
+{% for item in order.items.all %}  {{ item.quantity }} × {{ item.dish_name }} — ₹{{ item.sub_total|floatformat:"2" }}
+{% endfor %}
+Subtotal:        ₹{{ order.subtotal|floatformat:"2" }}
+Delivery fee:    ₹{{ order.delivery_fee|floatformat:"2" }}
+GST (5%):        ₹{{ order.tax|floatformat:"2" }}
+{% if order.discount %}Coupon {{ order.coupon_code }}:  − ₹{{ order.discount|floatformat:"2" }}
+{% endif %}
+TOTAL:           ₹{{ order.total|floatformat:"2" }}
+
+DELIVERING TO
+{{ order.address.full_name }} ({{ order.address.phone }})
+{{ order.address_snapshot }}
+{% if order.special_instructions %}
+YOUR NOTES
+{{ order.special_instructions }}
+{% endif %}
+
+Track your order anytime:
+  1. Log in to QuickBite
+  2. Open "My Orders"
+  3. Tap order {{ order.order_id }}
+
+Thank you for ordering with QuickBite!
+— Team QuickBite 🧡

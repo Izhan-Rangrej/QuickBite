@@ -1,0 +1,26 @@
+# ---- QuickBite production requirements ----
+# Install:  pip install -r requirements.txt
+
+# Framework
+Django==6.1.1
+
+# Images (dish/restaurant/category uploads + optimize_images command)
+Pillow==12.3.0
+
+# Environment-driven settings (.env locally, real env vars in production)
+python-decouple==3.8
+
+# Static files: fingerprinting, gzip/brotli compression, cache headers
+whitenoise==6.12.0
+
+# PostgreSQL driver (production database on Render/Railway/PythonAnywhere).
+# Local development uses SQLite and doesn't need it, but keeping it here
+# makes production installs one command.
+psycopg[binary]==3.3.5
+
+# Static asset minification (python manage.py minify_static)
+rcssmin==1.2.2
+rjsmin==1.2.5
+
+# Development-only tooling
+django-debug-toolbar==8.0.0   # enable with DEBUG_TOOLBAR=True in .env

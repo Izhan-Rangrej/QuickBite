@@ -1,0 +1,32 @@
+{% comment %}AJAX partial — results bar + active filter tags + grid + pagination.{% endcomment %}
+<div class="qb-results-bar">
+    <span class="qb-result-count"><strong>{{ total_results }}</strong> dish{{ total_results|pluralize }} found</span>
+</div>
+
+{% if q or category or veg or min_price or max_price or rating or delivery or cuisines %}
+<div class="qb-active-tags">
+    {% if q %}<a class="qb-tag" href="?{{ base_qs }}&q=">“{{ q }}” <i class='bx bx-x'></i></a>{% endif %}
+    {% if category %}<a class="qb-tag" href="?{% for k, v in request.GET.items %}{% if k != 'category' and k != 'page' %}{{ k }}={{ v }}&{% endif %}{% endfor %}">{{ category }} <i class='bx bx-x'></i></a>{% endif %}
+    {% if veg == '1' %}<a class="qb-tag" href="?{{ base_qs }}&veg=">🟢 Veg <i class='bx bx-x'></i></a>{% endif %}
+    {% if veg == '0' %}<a class="qb-tag" href="?{{ base_qs }}&veg=">🔴 Non-Veg <i class='bx bx-x'></i></a>{% endif %}
+    {% if min_price or max_price %}<a class="qb-tag" href="?{{ base_qs }}&min_price=&max_price=">₹{{ min_price|default:"0" }} – ₹{{ max_price|default:"600" }} <i class='bx bx-x'></i></a>{% endif %}
+    {% if rating %}<a class="qb-tag" href="?{{ base_qs }}&rating=">{{ rating }}★ & up <i class='bx bx-x'></i></a>{% endif %}
+    {% if delivery %}<a class="qb-tag" href="?{{ base_qs }}&delivery=">≤ {{ delivery }} min <i class='bx bx-x'></i></a>{% endif %}
+    {% for c in cuisines %}<a class="qb-tag" href="?{{ base_qs }}&cuisines=">{{ c }} <i class='bx bx-x'></i></a>{% endfor %}
+</div>
+{% endif %}
+
+<div class="dishes-grid">
+    {% for dish in page_obj %}
+        {% cycle '0' '100' '200' as dish_delay silent %}
+        {% include 'core/includes/dish_card.html' with dish=dish delay=dish_delay %}
+    {% empty %}
+    <div class="empty-state">
+        <i class='bx bx-search-alt-2'></i>
+        <h3>No dishes match your filters</h3>
+        <p>Try widening the price range, lowering the rating filter, or clearing some tags.</p>
+    </div>
+    {% endfor %}
+</div>
+
+{% include 'core/includes/pagination.html' %}

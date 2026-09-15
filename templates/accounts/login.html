@@ -1,0 +1,52 @@
+{% extends 'accounts/auth_layout.html' %}
+
+{% block title %}Sign In | QuickBite{% endblock %}
+
+{% block auth_content %}
+    <h1>Welcome back 👋</h1>
+    <p class="qb-auth-sub">Sign in to order your favourite food</p>
+
+    <form method="post" novalidate>
+        {% csrf_token %}
+
+        {% if form.non_field_errors %}
+        <div class="qb-form-error">
+            {% for error in form.non_field_errors %}<p>{{ error }}</p>{% endfor %}
+        </div>
+        {% endif %}
+
+        <div class="qb-form-group">
+            <label for="{{ form.username.id_for_label }}">Username</label>
+            {{ form.username }}
+            {% for error in form.username.errors %}<span class="qb-field-error">{{ error }}</span>{% endfor %}
+        </div>
+
+        <div class="qb-form-group">
+            <label for="{{ form.password.id_for_label }}">Password</label>
+            {{ form.password }}
+            {% for error in form.password.errors %}<span class="qb-field-error">{{ error }}</span>{% endfor %}
+        </div>
+
+        <div class="qb-checkbox-row">
+            <label for="{{ form.remember_me.id_for_label }}">
+                {{ form.remember_me }} <span>Remember me</span>
+            </label>
+            <a class="qb-link" href="{% url 'accounts:password_reset' %}">Forgot password?</a>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-lg qb-btn-block">
+            Sign In <i class='bx bxs-right-arrow-alt'></i>
+        </button>
+
+        <div class="qb-divider">or continue with</div>
+
+        <div class="qb-social-row">
+            <a href="#" class="qb-social-btn" title="Google sign-in coming soon"><i class='bx bxl-google'></i> Google</a>
+            <a href="#" class="qb-social-btn" title="Facebook sign-in coming soon"><i class='bx bxl-facebook-circle'></i> Facebook</a>
+        </div>
+
+        <p class="qb-auth-footer">
+            New to QuickBite? <a class="qb-link" href="{% url 'accounts:signup' %}">Create an account</a>
+        </p>
+    </form>
+{% endblock %}

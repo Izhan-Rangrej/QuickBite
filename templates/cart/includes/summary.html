@@ -1,0 +1,75 @@
+{# Cart page — sticky order summary (replaced wholesale by AJAX responses) #}
+<div class="qb-summary-card" id="orderSummary" data-aos="fade-left">
+    <h3><i class='bx bx-receipt'></i> Order Summary</h3>
+
+    <div class="qb-summary-row">
+        <span>Item total ({{ totals.count }} item{{ totals.count|pluralize }})</span>
+        <span>₹{{ totals.subtotal|floatformat:"2" }}</span>
+    </div>
+
+    <div class="qb-summary-row">
+        <span>Delivery fee</span>
+        {% if totals.delivery %}
+        <span>₹{{ totals.delivery|floatformat:"2" }}</span>
+        {% else %}
+        <span class="qb-free">FREE 🎉</span>
+        {% endif %}
+    </div>
+
+    {% if totals.subtotal and totals.subtotal < totals.free_delivery_above %}
+    <p class="qb-delivery-hint">
+        Add ₹{{ totals.to_free_delivery|floatformat:"-2" }} more for FREE delivery
+        <span class="qb-progress" style="width:100%;margin-top:6px;">
+            <span style="width:{% widthratio totals.subtotal totals.free_delivery_above 100 %}%;"></span>
+        </span>
+    </p>
+    {% endif %}
+
+    <div class="qb-summary-row">
+        <span>GST (5%)</span>
+        <span>₹{{ totals.tax|floatformat:"2" }}</span>
+    </div>
+
+    <!-- Coupon -->
+    {% if totals.coupon %}
+    <div class="qb-coupon-applied">
+        <div>
+            <i class='bx bxs-offer'></i>
+            <strong>{{ totals.coupon.code }}</strong>
+            <small>{{ totals.coupon.discount_display }}</small>
+        </div>
+        <button class="qb-coupon-remove" id="couponRemoveBtn" title="Remove coupon"><i class='bx bx-x'></i></button>
+    </div>
+    <div class="qb-summary-row qb-discount-row">
+        <span>Coupon discount</span>
+        <span>− ₹{{ totals.discount|floatformat:"2" }}</span>
+    </div>
+    {% else %}
+    <div class="qb-coupon-form" id="couponForm">
+        <input type="text" id="couponInput" placeholder="Enter coupon code (try FIRST50)" maxlength="30">
+        <button class="btn btn-primary" id="couponApplyBtn">Apply</button>
+    </div>
+    {% if totals.coupon_error %}
+    <p class="qb-coupon-error">{{ totals.coupon_error }}</p>
+    {% endif %}
+    {% endif %}
+
+    <div class="qb-summary-total">
+        <span>To Pay</span>
+        <span>₹{{ totals.total|floatformat:"2" }}</span>
+    </div>
+
+    {% if totals.eta %}
+    <p class="qb-eta"><i class='bx bx-time-five'></i> Estimated delivery: <strong>~{{ totals.eta }} mins</strong></p>
+    {% endif %}
+
+    {% if '/checkout/' in request.path %}
+    <button type="submit" form="checkoutForm" class="btn btn-primary btn-block qb-checkout-btn" {% if totals.is_empty %}disabled{% endif %}>
+        Place Order <i class='bx bxs-check-shield'></i>
+    </button>
+    {% else %}
+    <button class="btn btn-primary btn-block qb-checkout-btn" id="checkoutBtn" {% if totals.is_empty %}disabled{% endif %}>
+        Proceed to Checkout <i class='bx bxs-right-arrow-alt'></i>
+    </button>
+    {% endif %}
+</div>

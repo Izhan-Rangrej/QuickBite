@@ -1,0 +1,5 @@
+{% comment %}Read-only star meter. Expects `value` (0–5 float).{% endcomment %}
+<span class="qb-stars" style="--pct: {% widthratio value 5 100 %}%" title="{{ value|default:0 }} out of 5">
+    <span class="qb-stars-bg">★★★★★</span>
+    <span class="qb-stars-fill">★★★★★</span>
+</span>

@@ -1,0 +1,43 @@
+{% extends 'dashboard/base.html' %}
+
+{% block title %}Categories{% endblock %}
+{% block page_title %}Categories{% endblock %}
+
+{% block admin_content %}
+    <div class="qb-admin-toolbar">
+        <div class="spacer"></div>
+        <a href="{% url 'dashboard:category_new' %}" class="qb-btn primary"><i class='bx bx-plus'></i> New category</a>
+    </div>
+
+    <div class="qb-panel">
+        <div class="qb-table-wrap">
+            <table class="qb-table">
+                <thead><tr><th></th><th>Name</th><th>Description</th><th>Dishes</th><th>Status</th><th>Actions</th></tr></thead>
+                <tbody>
+                {% for c in categories %}
+                <tr>
+                    <td>{% if c.image %}<img class="thumb" src="{{ c.image.url }}" alt="{{ c.name }}" loading="lazy">{% else %}<span class="thumb-ph">🗂️</span>{% endif %}</td>
+                    <td class="t-strong">{{ c.name }}</td>
+                    <td style="color:#888;">{{ c.description|truncatechars:50 }}</td>
+                    <td>{{ c.dish_count }}</td>
+                    <td>
+                        <span class="qb-status-badge {% if c.is_active %}delivered{% else %}cancelled{% endif %}">
+                            {% if c.is_active %}Active{% else %}Hidden{% endif %}</span>
+                    </td>
+                    <td style="white-space:nowrap;">
+                        <a class="qb-btn ghost sm" href="{% url 'dashboard:category_edit' c.pk %}"><i class='bx bx-edit'></i></a>
+                        <form method="post" action="{% url 'dashboard:category_delete' c.pk %}" style="display:inline;"
+                              onsubmit="return confirm('Delete {{ c.name }}?');">
+                            {% csrf_token %}
+                            <button class="qb-btn danger sm"><i class='bx bx-trash'></i></button>
+                        </form>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="6" style="color:#999;text-align:center;padding:30px;">No categories yet.</td></tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+{% endblock %}

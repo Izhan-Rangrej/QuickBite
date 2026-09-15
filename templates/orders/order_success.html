@@ -1,0 +1,83 @@
+{% extends 'base.html' %}
+
+{% block title %}Order Placed — {{ order.order_id }} | QuickBite{% endblock %}
+
+{% block content %}
+    <div class="qb-page">
+        <div class="container">
+
+            <div class="qb-success-wrap" data-aos="zoom-in">
+
+                <!-- confetti -->
+                <div class="qb-confetti" aria-hidden="true">
+                    <span style="--x:12%; --d:0.2s; --c:#FF5722;"></span>
+                    <span style="--x:22%; --d:0.9s; --c:#FFC107;"></span>
+                    <span style="--x:34%; --d:0.5s; --c:#4CAF50;"></span>
+                    <span style="--x:48%; --d:1.2s; --c:#2196F3;"></span>
+                    <span style="--x:58%; --d:0.35s; --c:#E91E63;"></span>
+                    <span style="--x:70%; --d:0.8s; --c:#FF9800;"></span>
+                    <span style="--x:82%; --d:1.05s; --c:#9C27B0;"></span>
+                    <span style="--x:92%; --d:0.6s; --c:#00BCD4;"></span>
+                </div>
+
+                <!-- animated checkmark -->
+                <div class="qb-success-check">
+                    <span class="qb-success-ring"></span>
+                    <span class="qb-success-ring delay"></span>
+                    <svg viewBox="0 0 52 52" class="qb-check-svg">
+                        <circle class="qb-check-circle" cx="26" cy="26" r="24" fill="none"></circle>
+                        <path class="qb-check-mark" fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8"></path>
+                    </svg>
+                </div>
+
+                <h2 class="qb-success-title">Order <span class="gradient-text">Placed!</span> 🎉</h2>
+                <p class="qb-success-sub">Thanks {{ order.user.display_name }}, your food is being prepared with love.</p>
+
+                <div class="qb-success-card">
+                    <div class="qb-success-row">
+                        <div>
+                            <small>Order ID</small>
+                            <strong>{{ order.order_id }}</strong>
+                        </div>
+                        <div>
+                            <small>Estimated delivery</small>
+                            <strong>~{{ order.eta_minutes }} mins ⏱️</strong>
+                        </div>
+                    </div>
+                    <div class="qb-success-row">
+                        <div>
+                            <small>Payment</small>
+                            <strong>{{ order.payment_display }}</strong>
+                        </div>
+                        <div>
+                            <small>To pay</small>
+                            <strong>₹{{ order.total|floatformat:"2" }}</strong>
+                        </div>
+                    </div>
+                    <div class="qb-success-items">
+                        {% for item in order.items.all %}
+                        <span class="qb-success-item">{{ item.quantity }}× {{ item.dish_name }}</span>
+                        {% endfor %}
+                    </div>
+                    <div class="qb-success-address">
+                        <i class='bx bx-map'></i> Delivering to {{ order.address.full_name }} — {{ order.address_snapshot }}
+                    </div>
+                </div>
+
+                <p class="qb-success-note">
+                    <i class='bx bx-envelope'></i> A confirmation email is on its way to <strong>{{ order.user.email }}</strong>
+                </p>
+
+                <div class="qb-success-actions">
+                    <a href="{% url 'orders:order_detail' order.order_id %}" class="btn btn-primary">
+                        <i class='bx bx-current-location'></i> Track Order
+                    </a>
+                    <a href="{% url 'core:menu' %}" class="btn btn-outline">
+                        Continue Browsing <i class='bx bxs-right-arrow-alt'></i>
+                    </a>
+                </div>
+            </div>
+
+        </div>
+    </div>
+{% endblock %}

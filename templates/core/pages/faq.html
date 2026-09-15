@@ -1,0 +1,28 @@
+{% extends 'core/pages/base_page.html' %}
+
+{% block title %}FAQ | QuickBite{% endblock %}
+{% block meta_description %}Frequently asked questions about ordering, delivery, coupons, refunds and accounts on QuickBite.{% endblock %}
+{% block page_tag %}❓ Quick answers{% endblock %}
+{% block crumb %}FAQ{% endblock %}
+{% block page_heading_block %}Frequently Asked <span class="gradient-text">Questions</span>{% endblock %}
+
+{% block prose %}
+    <div class="qb-faq">
+        {% for group_name, entries in faq_groups %}
+        <h3>{{ group_name }}</h3>
+        {% for question, answer in entries %}
+        <details class="qb-accordion">
+            <summary>
+                <span>{{ question }}</span>
+                <i class='bx bx-chevron-down'></i>
+            </summary>
+            <p>{{ answer }}</p>
+        </details>
+        {% endfor %}
+        {% endfor %}
+    </div>
+
+    <p class="qb-prose-note">
+        Still curious? <a href="{% url 'core:contact' %}">Ask us directly</a> — a human replies.
+    </p>
+{% endblock %}

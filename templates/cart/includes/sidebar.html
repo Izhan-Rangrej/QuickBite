@@ -1,0 +1,42 @@
+{% comment %}
+Cart sidebar content — rendered inside #cartSidebar, below .cart-header.
+Keeps the ORIGINAL template classes (.cart-items/.cart-item/.cart-footer)
+so the existing design + animations are untouched.
+{% endcomment %}
+<div class="cart-items">
+    {% for line in lines %}
+    <div class="cart-item" data-dish-id="{{ line.dish.id }}">
+        {% if line.dish.image %}
+        <img src="{{ line.dish.image.url }}" alt="{{ line.dish.name }}">
+        {% else %}
+        <div class="img-placeholder" style="min-height:60px;font-size:24px;border-radius:8px;">🍽️</div>
+        {% endif %}
+        <div class="cart-item-info">
+            <h4>{{ line.dish.name }}</h4>
+            <span class="cart-item-price">₹{{ line.dish.effective_price|floatformat:"-2" }}</span>
+        </div>
+        <div class="cart-item-qty">
+            <button class="qty-btn" data-action="dec" data-dish-id="{{ line.dish.id }}" aria-label="Decrease quantity">-</button>
+            <span>{{ line.quantity }}</span>
+            <button class="qty-btn" data-action="inc" data-dish-id="{{ line.dish.id }}" aria-label="Increase quantity">+</button>
+        </div>
+    </div>
+    {% empty %}
+    <div class="empty-state qb-empty-cart">
+        <div class="qb-empty-emoji">🛒</div>
+        <h3>Your cart is empty</h3>
+        <p>Good food is always cooking.<br>Go ahead, order some!</p>
+    </div>
+    {% endfor %}
+</div>
+
+<div class="cart-footer">
+    <div class="cart-total">
+        <span>Total:</span>
+        <span class="total-price">₹{{ totals.total|floatformat:"2" }}</span>
+    </div>
+    <a href="{% url 'cart:cart_page' %}" class="btn btn-primary btn-block" style="margin-bottom:8px;">
+        <i class='bx bx-cart'></i> View Cart
+    </a>
+    <a href="{% url 'orders:checkout' %}" class="btn btn-primary btn-block">Proceed to Checkout</a>
+</div>

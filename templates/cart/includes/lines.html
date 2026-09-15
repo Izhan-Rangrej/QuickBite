@@ -1,0 +1,47 @@
+{# Cart page — item lines (replaced wholesale by AJAX responses) #}
+<div class="qb-cart-lines" id="cartLines">
+    {% for line in lines %}
+    <div class="qb-cart-line" data-dish-id="{{ line.dish.id }}" data-aos="fade-up">
+        <div class="qb-cart-line-img">
+            {% if line.dish.image %}
+            <img src="{{ line.dish.image.url }}" alt="{{ line.dish.name }}">
+            {% else %}
+            <div class="img-placeholder" style="font-size:32px;">🍽️</div>
+            {% endif %}
+        </div>
+        <div class="qb-cart-line-info">
+            <a class="qb-title-link" href="{% url 'core:dish_detail' line.dish.slug %}"><h3>{{ line.dish.name }}</h3></a>
+            <p class="qb-cart-line-rest">
+                <i class='bx bx-store-alt'></i>
+                <a class="qb-title-link" href="{% url 'core:restaurant_detail' line.dish.restaurant.slug %}">{{ line.dish.restaurant.name }}</a>
+            </p>
+            <div class="qb-cart-line-price">
+                ₹{{ line.dish.effective_price|floatformat:"-2" }}
+                {% if line.dish.discount_price %}
+                <s style="color:#bbb;font-weight:500;font-size:13px;">₹{{ line.dish.price|floatformat:"-2" }}</s>
+                {% endif %}
+            </div>
+        </div>
+        <div class="qb-cart-line-actions">
+            <div class="cart-item-qty">
+                <button class="qty-btn" data-action="dec" data-dish-id="{{ line.dish.id }}" aria-label="Decrease quantity">-</button>
+                <span>{{ line.quantity }}</span>
+                <button class="qty-btn" data-action="inc" data-dish-id="{{ line.dish.id }}" aria-label="Increase quantity">+</button>
+            </div>
+            <div class="qb-line-subtotal">₹{{ line.sub_total|floatformat:"2" }}</div>
+            <button class="qb-remove-btn" data-dish-id="{{ line.dish.id }}" aria-label="Remove item">
+                <i class='bx bx-trash'></i>
+            </button>
+        </div>
+    </div>
+    {% empty %}
+    <div class="empty-state qb-empty-cart">
+        <div class="qb-empty-emoji">🛒</div>
+        <h3>Your cart is empty</h3>
+        <p>Good food is always cooking. Go ahead, order some!</p>
+        <a href="{% url 'core:menu' %}" class="btn btn-primary" style="margin-top:16px;">
+            Browse Menu <i class='bx bxs-right-arrow-alt'></i>
+        </a>
+    </div>
+    {% endfor %}
+</div>

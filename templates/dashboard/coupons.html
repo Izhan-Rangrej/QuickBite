@@ -1,0 +1,54 @@
+{% extends 'dashboard/base.html' %}
+
+{% block title %}Coupons{% endblock %}
+{% block page_title %}Coupons & Offers{% endblock %}
+
+{% block admin_content %}
+    <div class="qb-admin-toolbar">
+        <div class="spacer"></div>
+        <a href="{% url 'dashboard:coupon_new' %}" class="qb-btn primary"><i class='bx bx-plus'></i> New coupon</a>
+    </div>
+
+    <div class="qb-panel">
+        <div class="qb-table-wrap">
+            <table class="qb-table">
+                <thead>
+                <tr><th>Code</th><th>Title</th><th>Discount</th><th>Min order</th>
+                    <th>Usage</th><th>Valid</th><th>Status</th><th>Actions</th></tr>
+                </thead>
+                <tbody>
+                {% for c in coupons %}
+                <tr>
+                    <td><span class="t-strong" style="background:#FFF3E0;color:#E65100;padding:4px 10px;border-radius:8px;font-size:12.5px;">{{ c.code }}</span></td>
+                    <td>{{ c.title }}</td>
+                    <td class="t-money">
+                        {% if c.discount_percentage %}{{ c.discount_percentage|floatformat:"0" }}%{% if c.max_discount %} <small style="color:#999;">cap ₹{{ c.max_discount|floatformat:"0" }}</small>{% endif %}
+                        {% else %}₹{{ c.discount_amount|floatformat:"0" }}{% endif %}
+                    </td>
+                    <td>₹{{ c.min_order_amount|floatformat:"0" }}</td>
+                    <td>
+                        {{ c.used_count }}{% if c.usage_limit %} / {{ c.usage_limit }}{% else %} / ∞{% endif %}
+                    </td>
+                    <td><small style="color:#888;">{{ c.valid_from|date:"d M" }} → {{ c.valid_until|date:"d M Y" }}</small></td>
+                    <td>
+                        {% if not c.is_active %}<span class="qb-status-badge cancelled">Disabled</span>
+                        {% elif not c.is_valid_now %}<span class="qb-status-badge pending">Expired/Maxed</span>
+                        {% else %}<span class="qb-status-badge delivered">Live</span>{% endif %}
+                    </td>
+                    <td style="white-space:nowrap;">
+                        <a class="qb-btn ghost sm" href="{% url 'dashboard:coupon_edit' c.pk %}"><i class='bx bx-edit'></i></a>
+                        <form method="post" action="{% url 'dashboard:coupon_delete' c.pk %}" style="display:inline;"
+                              onsubmit="return confirm('Delete coupon {{ c.code }}?');">
+                            {% csrf_token %}
+                            <button class="qb-btn danger sm"><i class='bx bx-trash'></i></button>
+                        </form>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="8" style="color:#999;text-align:center;padding:30px;">No coupons yet.</td></tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+{% endblock %}

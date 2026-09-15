@@ -1,0 +1,143 @@
+{% extends 'base.html' %}
+
+{% block title %}Menu | QuickBite{% endblock %}
+
+{% block meta_description %}Browse the full QuickBite menu — {{ total_results }} dishes with prices, ratings and delivery times. Filter by price, rating, cuisine and veg preference.{% endblock %}
+{% block og_title %}Full Menu — Browse {{ total_results }} Dishes | QuickBite{% endblock %}
+
+{% block content %}
+    <div class="qb-page">
+        <div class="container">
+
+            <!-- Breadcrumb -->
+            <nav class="qb-breadcrumb" aria-label="Breadcrumb">
+                <a href="{% url 'core:home' %}"><i class='bx bx-home'></i> Home</a>
+                <i class='bx bx-chevron-right'></i>
+                <span class="current">Menu</span>
+            </nav>
+
+            <div class="section-header" data-aos="fade-up">
+                <span class="section-tag">🍽️ Explore</span>
+                <h2>Our <span class="gradient-text">Menu</span></h2>
+                <p>{{ total_results }} dish{{ total_results|pluralize }} across all restaurants</p>
+            </div>
+
+            <div class="qb-menu-layout">
+
+                <!-- ===== Filter sidebar (AJAX — no reloads) ===== -->
+                <aside class="qb-filter-sidebar" data-aos="fade-right">
+                    <form method="get" id="menuFilters">
+                        <input type="hidden" name="category" value="{{ category }}">
+
+                        <div class="qb-filter-group">
+                            <h4><i class='bx bx-search'></i> Search</h4>
+                            <div class="qb-price-inputs">
+                                <input type="text" name="q" value="{{ q }}" placeholder="Dish or restaurant..." data-debounce="400">
+                            </div>
+                        </div>
+
+                        <div class="qb-filter-group">
+                            <h4><i class='bx bx-leaf'></i> Veg / Non-Veg</h4>
+                            <div class="qb-radio-row">
+                                <label><input type="radio" name="veg" value="" {% if veg == '' %}checked{% endif %}><span>All</span></label>
+                                <label><input type="radio" name="veg" value="1" {% if veg == '1' %}checked{% endif %}><span>🟢 Veg</span></label>
+                                <label><input type="radio" name="veg" value="0" {% if veg == '0' %}checked{% endif %}><span>🔴 Non-Veg</span></label>
+                            </div>
+                        </div>
+
+                        <div class="qb-filter-group">
+                            <h4><i class='bx bx-rupee'></i> Price Range</h4>
+                            <div class="qb-range-slider" id="priceSlider">
+                                <div class="qb-range-track"><div class="qb-range-fill"></div></div>
+                                <input type="range" name="min_price" min="0" max="600" step="10"
+                                       value="{{ min_price|default:'0' }}" aria-label="Minimum price">
+                                <input type="range" name="max_price" min="0" max="600" step="10"
+                                       value="{{ max_price|default:'600' }}" aria-label="Maximum price">
+                            </div>
+                            <div class="qb-range-values">
+                                <span id="priceMinLabel">₹{{ min_price|default:'0' }}</span>
+                                <span id="priceMaxLabel">₹{{ max_price|default:'600' }}{% if not max_price %}+{% endif %}</span>
+                            </div>
+                        </div>
+
+                        <div class="qb-filter-group">
+                            <h4><i class='bx bx-star'></i> Rating</h4>
+                            <div class="qb-rating-chips">
+                                <label><input type="radio" name="rating" value="" {% if not rating %}checked{% endif %}><span>Any</span></label>
+                                <label><input type="radio" name="rating" value="3.0" {% if rating == '3.0' %}checked{% endif %}><span>3.0+ ★</span></label>
+                                <label><input type="radio" name="rating" value="4.0" {% if rating == '4.0' %}checked{% endif %}><span>4.0+ ★</span></label>
+                                <label><input type="radio" name="rating" value="4.5" {% if rating == '4.5' %}checked{% endif %}><span>4.5+ ★</span></label>
+                            </div>
+                        </div>
+
+                        <div class="qb-filter-group">
+                            <h4><i class='bx bx-time-five'></i> Delivery Time</h4>
+                            <select name="delivery" class="qb-select" style="width:100%;">
+                                <option value="">Any</option>
+                                <option value="20" {% if delivery == '20' %}selected{% endif %}>Under 20 mins</option>
+                                <option value="30" {% if delivery == '30' %}selected{% endif %}>Under 30 mins</option>
+                                <option value="40" {% if delivery == '40' %}selected{% endif %}>Under 40 mins</option>
+                            </select>
+                        </div>
+
+                        <div class="qb-filter-group">
+                            <h4><i class='bx bx-restaurant'></i> Cuisine</h4>
+                            <div class="qb-check-list">
+                                {% for value, label in cuisine_choices %}
+                                <label>
+                                    <input type="checkbox" name="cuisines" value="{{ value }}"
+                                           {% if value in cuisines %}checked{% endif %}>
+                                    <span>{{ label }}</span>
+                                </label>
+                                {% endfor %}
+                            </div>
+                        </div>
+
+                        <div class="qb-filter-group">
+                            <h4><i class='bx bx-sort-alt-2'></i> Sort By</h4>
+                            <select name="sort" class="qb-select" style="width:100%;">
+                                <option value="relevance" {% if sort == 'relevance' %}selected{% endif %}>Relevance</option>
+                                <option value="popular" {% if sort == 'popular' %}selected{% endif %}>Popularity</option>
+                                <option value="price_asc" {% if sort == 'price_asc' %}selected{% endif %}>Price: Low → High</option>
+                                <option value="price_desc" {% if sort == 'price_desc' %}selected{% endif %}>Price: High → Low</option>
+                                <option value="rating" {% if sort == 'rating' %}selected{% endif %}>Top Rated</option>
+                                <option value="delivery" {% if sort == 'delivery' %}selected{% endif %}>Fastest Delivery</option>
+                            </select>
+                        </div>
+
+                        <div class="qb-filter-group">
+                            <button type="button" id="clearFilters" class="qb-chip" style="width:100%;justify-content:center;">
+                                <i class='bx bx-refresh'></i> Clear all filters
+                            </button>
+                        </div>
+                    </form>
+
+                    <div class="qb-filter-group">
+                        <h4><i class='bx bx-category'></i> Categories</h4>
+                        <ul class="qb-cat-list">
+                            <li><a href="#" data-category="" {% if not category %}class="active"{% endif %}>All <span class="count">∞</span></a></li>
+                            {% for cat in categories %}
+                            <li>
+                                <a href="#" data-category="{{ cat.slug }}" {% if category == cat.slug %}class="active"{% endif %}>
+                                    {{ cat.name }} <span class="count">{{ cat.active_dishes }}</span>
+                                </a>
+                            </li>
+                            {% empty %}
+                            <li><a href="#">No categories yet</a></li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </aside>
+
+                <!-- ===== Results (replaced by AJAX) ===== -->
+                <main id="menuResults">
+                    {% include 'core/includes/menu_results.html' %}
+                </main>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block extra_js %}
+    <script src="{% static_min 'js/filters.js' %}"></script>
+{% endblock %}

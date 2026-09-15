@@ -1,0 +1,9 @@
+{% extends 'errors/base_error.html' %}
+{% block error_title %}Access denied{% endblock %}
+{% block error_emoji %}🚫{% endblock %}
+{% block error_code %}403{% endblock %}
+{% block error_heading %}Kitchen's closed to you{% endblock %}
+{% block error_message %}
+    You don't have permission to view this page. If you think that's a mistake,
+    log in with the right account or reach out to support.
+{% endblock %}
