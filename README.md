@@ -5,7 +5,7 @@ Browse restaurants and dishes, cart and checkout with coupons, track orders live
 review what you ate — and manage everything from an admin dashboard and a
 restaurant-owner panel.
 
-> **Live demo:** https://shopsphere-t0ez.onrender.com
+> **Live demo:** https://quickbite-p7x2.onrender.com
 > *(deploy it in ~15 min — see [DEPLOYMENT.md](DEPLOYMENT.md))*
 
 
