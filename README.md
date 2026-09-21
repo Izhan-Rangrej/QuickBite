@@ -5,12 +5,9 @@ Browse restaurants and dishes, cart and checkout with coupons, track orders live
 review what you ate — and manage everything from an admin dashboard and a
 restaurant-owner panel.
 
-> **Live demo:** https://shopsphere-t0ez.onrender.com *(deploy it in ~15 min — see [DEPLOYMENT.md](DEPLOYMENT.md))*
+> **Live demo:** https://shopsphere-t0ez.onrender.com
+> *(deploy it in ~15 min — see [DEPLOYMENT.md](DEPLOYMENT.md))*
 
-![Homepage](docs/screenshots/home.png)
-*Replace the paths in `docs/screenshots/` with your own captures — suggested shots:
-home, menu with filters, dish detail with reviews, cart, checkout, order tracking,
-admin dashboard, owner panel.*
 
 ---
 
